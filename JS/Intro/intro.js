@@ -1,14 +1,12 @@
-function fibonacciGenerator(n) {
-  let numbers = [];
-  for (let i = 0; i < n; i++) {
-    if (i == 0) {
-      numbers.push(0);
-    } else if (i <= 1) {
-      numbers.push(1);
-    } else {
-      let nextNumber = numbers[i - 1] + numbers[i - 2];
-      numbers.push(nextNumber);
-    }
-  }
-  return numbers;
+function HouseKeeper(yearsOfExperience, name, cleaningRepertoire) {
+  this.yearsOfExperience = yearsOfExperience;
+  this.name = name;
+  this.cleaningRepertoire = cleaningRepertoire;
+  this.clean = function () {
+    console.log("I cleaned");
+  };
 }
+
+let puss = new HouseKeeper(12, "frans", ["celani", "fjsdf", "dfs"]);
+
+puss.clean();
