@@ -47,16 +47,55 @@ app.get("/filter", (req, res) => {
 
 //4. POST a new joke
 app.post("/new", (req, res) => {
-  let newJoke = req.body.newJoke;
-  res.send(newJoke);
+  let newJoke = req.body;
+  if (newJoke.jokeText && newJoke.jokeType) {
+    newJoke = Object.assign({ id: jokes.length + 1 }, newJoke);
+    jokes.push(newJoke);
+    console.log(jokes);
+    res.status(200).send("Added your Joke to the List");
+  } else {
+    res.status(400).send("Missing Data in Request");
+  }
 });
 
 //5. PUT a joke
+app.put("/put", (req, res) => {
+  let updatedJoke = req.body;
+  if (updatedJoke.id < 1 || updatedJoke.id > jokes.length) {
+    res.status(400).send("ID out of Bounds");
+  } else {
+    jokes[updatedJoke.id - 1] = updatedJoke;
+    res.status(200).send(`Updated Joke at ${updatedJoke.id}`);
+  }
+});
 
 //6. PATCH a joke
-
+app.patch("/patch", (req, res) => {
+  let updatedJoke = req.body;
+  if (!updatedJoke.id || updatedJoke.id < 1 || updatedJoke.id > jokes.length) {
+    res.status(400).send("ID Either not Provided or Out of Bounds");
+  } else {
+    if (updatedJoke.jokeText) {
+      jokes[updatedJoke.id - 1].jokeText = updatedJoke.jokeText;
+    }
+    if (updatedJoke.jokeType) {
+      jokes[updatedJoke.id - 1].jokeType = updatedJoke.jokeType;
+    }
+    res.status(200).send(`Joke at ${updatedJoke.id} Updated`);
+    console.log(jokes[updatedJoke.id - 1]);
+  }
+});
 //7. DELETE Specific joke
 
+// app.delete("/delete", (req, res) => {
+//   let id = parseInt(req.query.id) - 1;
+//   if (id > 0 && id < jokes.length) {
+//     jokes.splice(jokes[id], 1);
+//     res.send(jokes);
+//   } else {
+//     res.status(400).send("ID Out of Bounds");
+//   }
+// });
 //8. DELETE All jokes
 
 app.listen(port, () => {

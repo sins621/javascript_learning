@@ -36,6 +36,57 @@ async function getJokeByType(jokeType) {
     console.error(error);
   }
 }
-//getRandomJoke();
-//getSpecificJoke(10);
-getJokeByType("Poes");
+
+async function addNewJoke(jokeText, jokeType) {
+  try {
+    const response = await axios.post(url + "/new", {
+      jokeText: jokeText,
+      jokeType: jokeType,
+    });
+    console.log(response.data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function putJoke(id, jokeText, jokeType) {
+  try {
+    const response = await axios.put(url + "/put", {
+      id: id,
+      jokeText: jokeText,
+      jokeType: jokeType,
+    });
+    console.log(response.data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function patchJoke(id, jokeText, jokeType) {
+  try {
+    const response = await axios.patch(url + "/patch", {
+      id: id,
+      jokeType: jokeType,
+    });
+    console.log(response.data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function deleteJoke(id) {
+  try {
+    const response = await axios.delete(url + "/delete", {
+      params:{
+      id: id,
+      }
+    });
+    console.log(response.data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+deleteJoke(100);
+
+// patchJoke(1, "Dumb Joke", "Dumb Joke");
