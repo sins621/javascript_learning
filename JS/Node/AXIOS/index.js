@@ -77,9 +77,9 @@ async function patchJoke(id, jokeText, jokeType) {
 async function deleteJoke(id) {
   try {
     const response = await axios.delete(url + "/delete", {
-      params:{
-      id: id,
-      }
+      params: {
+        id: id,
+      },
     });
     console.log(response.data);
   } catch (error) {
@@ -87,6 +87,17 @@ async function deleteJoke(id) {
   }
 }
 
-deleteJoke(100);
+async function deleteAll() {
+  try {
+    const response = await axios.delete(url + "/deleteAll");
+    console.log(response.data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+deleteAll();
+getRandomJoke();
+
 
 // patchJoke(1, "Dumb Joke", "Dumb Joke");

@@ -3,7 +3,6 @@ import morgan from "morgan";
 
 const app = express();
 const port = 5000;
-const masterKey = "4VGP2DN-6EWM4SJ-N6FGRHV-Z3PR3TT";
 
 app.use(morgan("tiny"));
 app.use(express.json());
@@ -87,15 +86,19 @@ app.patch("/patch", (req, res) => {
 });
 //7. DELETE Specific joke
 
-// app.delete("/delete", (req, res) => {
-//   let id = parseInt(req.query.id) - 1;
-//   if (id > 0 && id < jokes.length) {
-//     jokes.splice(jokes[id], 1);
-//     res.send(jokes);
-//   } else {
-//     res.status(400).send("ID Out of Bounds");
-//   }
-// });
+app.delete("/delete", (req, res) => {
+  let id = req.query.id;
+  let index = req.query.id - 1;
+  jokes.splice(index, 1);
+  //console.log(req.query.id);
+  res.status(200).send(`Deleted Joke at ${id}`);
+});
+
+app.delete("/deleteall", (req, res) => {
+  jokes.splice(0, jokes.length);
+  res.status(200).send("Deleted All Jokes");
+});
+
 //8. DELETE All jokes
 
 app.listen(port, () => {
