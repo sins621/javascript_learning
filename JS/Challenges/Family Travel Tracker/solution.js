@@ -27,7 +27,7 @@ let users = [
 async function checkVisisted() {
   const result = await db.query(
     "SELECT country_code FROM visited_countries JOIN users ON users.id = user_id WHERE user_id = $1; ",
-    [currentUserId]
+    [currentUserId],
   );
   let countries = [];
   result.rows.forEach((country) => {
@@ -38,13 +38,13 @@ async function checkVisisted() {
 
 async function getCurrentUser() {
   const result = await db.query("SELECT * FROM users");
-  users = result.rows;
-  return users.find((user) => user.id == currentUserId);
+  return result.rows;
 }
 
 app.get("/", async (req, res) => {
   const countries = await checkVisisted();
-  const currentUser = await getCurrentUser();
+  const currentUser = 1;
+  users = await getCurrentUser();
   res.render("index.ejs", {
     countries: countries,
     total: countries.length,
@@ -52,6 +52,7 @@ app.get("/", async (req, res) => {
     color: currentUser.color,
   });
 });
+
 app.post("/add", async (req, res) => {
   const input = req.body["country"];
   const currentUser = await getCurrentUser();
@@ -59,7 +60,7 @@ app.post("/add", async (req, res) => {
   try {
     const result = await db.query(
       "SELECT country_code FROM countries WHERE LOWER(country_name) LIKE '%' || $1 || '%';",
-      [input.toLowerCase()]
+      [input.toLowerCase()],
     );
 
     const data = result.rows[0];
@@ -67,7 +68,7 @@ app.post("/add", async (req, res) => {
     try {
       await db.query(
         "INSERT INTO visited_countries (country_code, user_id) VALUES ($1, $2)",
-        [countryCode, currentUserId]
+        [countryCode, currentUserId],
       );
       res.redirect("/");
     } catch (err) {
@@ -93,11 +94,12 @@ app.post("/new", async (req, res) => {
 
   const result = await db.query(
     "INSERT INTO users (name, color) VALUES($1, $2) RETURNING *;",
-    [name, color]
+    [name, color],
   );
 
   const id = result.rows[0].id;
   currentUserId = id;
+  console.log(id);
 
   res.redirect("/");
 });
