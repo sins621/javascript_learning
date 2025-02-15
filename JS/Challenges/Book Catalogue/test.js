@@ -14,6 +14,17 @@ app.get("/", async (_req, res) => {
   res.render("index.ejs", {});
 });
 
+app.post("/add", async (req, res) => {
+  let author = req.body.author;
+  let title = req.body.title;
+  console.log(author, title);
+  res.redirect("/");
+});
+
+app.get("/add", async (req, res) => {
+  res.render("add_book.ejs");
+});
+
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
