@@ -1,37 +1,46 @@
 import express from "express";
 import bodyParser from "body-parser";
-import pg from "pg";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import readline from "node:readline";
+// import pg from "pg";
+// import { GoogleGenerativeAI } from "@google/generative-ai";
+// import axios from "axios";
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
+const app = express();
+const port = 3000;
+
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static("public"));
+
+app.get("/", async (_req, res) => {
+  res.render("index.ejs", {});
 });
 
-function readLineAsync(message) {
-  return new Promise((resolve, reject) => {
-    rl.question(message, (answer) => {
-      resolve(answer);
-    });
-  });
-}
+app.listen(port, () => {
+  console.log(`Server running on http://localhost:${port}`);
+});
 
-// Leverages Node.js' awesome async/await functionality
-async function demoSynchronousPrompt() {
-  var promptInput = await readLineAsync("Give me some input >");
-  console.log("Won't be executed until promptInput is received", promptInput);
-  rl.close();
-}
+// let url = "https://openlibrary.org/search.json";
+// let params = {
+//   title: book,
+//   author: author,
+//   limit: 10,
+//   fields: "title,author_name,cover_i",
+// };
 
-demoSynchronousPrompt();
+// axios
+//   .get(url, {
+//     params: params,
+//   })
+//   .then(function (response) {
+//     console.log(response.data);
+//   })
+//   .catch(function (error) {});
 
 // const app = express();
 // const port = 3000;
 
 // const db = new pg.Client({
 //   user: "postgres",
-//   host: "localhost",
+//   host: "sins@pop-os",
 //   database: "books",
 //   password: "123456",
 //   port: 5432,
@@ -51,7 +60,3 @@ demoSynchronousPrompt();
 
 // app.use(bodyParser.urlencoded({ extended: true }));
 // app.use(express.static("public"));
-
-// app.listen(port, () => {
-//   console.log(`Server running on http://localhost:${port}`);
-// });
