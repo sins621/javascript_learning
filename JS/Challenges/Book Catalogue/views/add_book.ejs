@@ -1,7 +1,71 @@
 <%- include('header') -%>
-<form action="/add" method="post">
-  <input type="text" name="author" placeholder="author" /><br />
-  <input type="text" name="title" placeholder="title" /><br />
-  <input type="submit" value="Submit" />
-</form>
-<%- include('footer') -%>
+<div class="p-2">
+  <form action="/add" method="post">
+    <input class="mb-1" type="text" name="author" placeholder="Author" /><br />
+    <input class="mb-1" type="text" name="title" placeholder="Title" /><br />
+    <input class="mb-1" type="submit" value="Search" />
+  </form>
+
+  <form action="/submit" method="post">
+    <% if (locals.books) {%>
+    <h1>Books found</h1>
+    <select
+      name="book"
+      class="form-select mb-1"
+      aria-label="Default select example"
+      id="book_select"
+    >
+      <option selected>Select the Correct Book</option>
+      <% locals.books.docs.forEach((book) => { %>
+      <option value="<%= JSON.stringify(book) %>"><%= book.title %></option>
+      <% }) %>
+    </select>
+
+    <h2>Abstract:</h2>
+    <textarea
+      name="abstract"
+      class="form-control mb-2"
+      aria-label="With textarea"
+      placeholder="Enter an Abstract for the Book or Generate with AI"
+      id="abstract_text"
+    ></textarea>
+    <button type="button" class="btn btn-primary mb-2" onclick="genAbstract()">
+      Generate
+    </button>
+    <br />
+
+    <input
+      class="mb-1"
+      type="text"
+      name="quantity"
+      placeholder="Quantity"
+    /><br />
+    <input class="mb-2" type="text" name="price" placeholder="Price" /><br />
+    <input class="mb-1" type="submit" value="Submit" />
+  </form>
+
+  <div><% } %> <%- include('footer') -%></div>
+</div>
+
+<script>
+  function genAbstract() {
+    console.log("Button Clicked");
+    let text_area = document.getElementById("abstract_text");
+    let select = document.getElementById("book_select");
+    let value = select.options[select.selectedIndex].value;
+    let book_info = JSON.parse(value);
+    let author = book_info.author_name[0];
+    let title = book_info.title;
+    fetch(`/api/ai_abstract?author=${author}&title=${title}`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.text();
+      })
+      .then((data) => {
+        console.log(data);
+        text_area.value = data;
+      });
+  }
+</script>
