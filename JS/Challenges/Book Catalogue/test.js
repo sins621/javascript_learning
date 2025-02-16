@@ -1,12 +1,38 @@
 import express from "express";
 import bodyParser from "body-parser";
 import morgan from "morgan";
-// import pg from "pg";
+import pg from "pg";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import axios from "axios";
 
 const app = express();
 const port = 3000;
+
+const db = new pg.Client({
+  user: "postgres",
+  host: "localhost",
+  database: "book_website",
+  password: "123456",
+  port: 5432,
+});
+db.connect();
+
+const categories = [
+  "Fantasy",
+  "Horror",
+  "Historical Fiction",
+  "Mystery",
+  "Literary Fiction",
+  "Thriller",
+  "Science Fiction",
+  "Philosophical",
+  "Religious",
+  "Drama",
+  "Comedy",
+  "Crime and Detective",
+  "Self Help",
+  "Non-fiction",
+];
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
@@ -17,11 +43,10 @@ app.get("/", async (_req, res) => {
 });
 
 app.post("/add", async (req, res) => {
-  let author = req.body.author;
-  let title = req.body.title;
-  console.log(`Author: ${author}, Title ${title}`);
-  let url = "https://openlibrary.org/search.json";
-  let params = {
+  const author = req.body.author;
+  const title = req.body.title;
+  const url = "https://openlibrary.org/search.json";
+  const params = {
     title: title,
     author: author,
     limit: 5,
@@ -31,8 +56,8 @@ app.post("/add", async (req, res) => {
   axios
     .get(url, { params: params })
     .then(function (response) {
-      let books = response.data;
-      res.render("add_book.ejs", { books: books });
+      const books = response.data;
+      res.render("add_book.ejs", { books: books, categories: categories });
     })
     .catch(function (error) {
       console.log(error);
@@ -46,7 +71,30 @@ app.get("/add", async (req, res) => {
 
 app.post("/submit", async (req, res) => {
   console.log(req.body);
-  res.redirect("/add");
+  const book = JSON.parse(req.body.book);
+  const title = book.title;
+  const author = book.author_name[0];
+  const category = req.body.category;
+  const publish_year = book.publish_year[0];
+  const abstract = req.body.abstract;
+  const cover_id = book.cover_i;
+  const quantity = req.body.quantity;
+  const price = req.body.price;
+  const values_to_add = [
+    title,
+    author,
+    category,
+    publish_year,
+    abstract,
+    cover_id,
+    quantity,
+    price,
+  ];
+  db.query(
+    "INSERT INTO book (title, author, category, publish_year, abstract, cover_id, quantity, price) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+    values_to_add
+  );
+  res.redirect("/");
 });
 
 app.get("/api/ai_abstract", async (req, res) => {
@@ -76,14 +124,6 @@ app.listen(port, () => {
 // const app = express();
 // const port = 3000;
 
-// const db = new pg.Client({
-//   user: "postgres",
-//   host: "sins@pop-os",
-//   database: "books",
-//   password: "123456",
-//   port: 5432,
-// });
-
 // const genAI = new GoogleGenerativeAI(process.env.GEMINI_KEY);
 // const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
@@ -92,9 +132,6 @@ app.listen(port, () => {
 
 // const result = await model.generateContent(prompt);
 // console.log(result.response.text());
-
-// db.connect();
-// db.query("SELECT * FROM users");
 
 // app.use(bodyParser.urlencoded({ extended: true }));
 // app.use(express.static("public"));

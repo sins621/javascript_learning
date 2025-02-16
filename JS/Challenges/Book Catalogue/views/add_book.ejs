@@ -41,6 +41,20 @@
       placeholder="Quantity"
     /><br />
     <input class="mb-2" type="text" name="price" placeholder="Price" /><br />
+    <% if (locals.categories) {%>
+
+    <select
+      name="category"
+      class="form-select mb-2"
+      aria-label="Default select example"
+      id="category_select"
+    >
+      <option selected>Select a Category</option>
+      <% categories.forEach((category) => { %>
+      <option value="<%= category %>"><%= category %></option>
+      <% }) %>
+    </select>
+    <% } %>
     <input class="mb-1" type="submit" value="Submit" />
   </form>
 
@@ -49,13 +63,12 @@
 
 <script>
   function genAbstract() {
-    console.log("Button Clicked");
-    let text_area = document.getElementById("abstract_text");
-    let select = document.getElementById("book_select");
-    let value = select.options[select.selectedIndex].value;
-    let book_info = JSON.parse(value);
-    let author = book_info.author_name[0];
-    let title = book_info.title;
+    const text_area = document.getElementById("abstract_text");
+    const select = document.getElementById("book_select");
+    const value = select.options[select.selectedIndex].value;
+    const book_info = JSON.parse(value);
+    const author = book_info.author_name[0];
+    const title = book_info.title;
     fetch(`/api/ai_abstract?author=${author}&title=${title}`)
       .then((response) => {
         if (!response.ok) {
@@ -64,7 +77,6 @@
         return response.text();
       })
       .then((data) => {
-        console.log(data);
         text_area.value = data;
       });
   }
