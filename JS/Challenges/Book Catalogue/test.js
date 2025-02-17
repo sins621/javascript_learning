@@ -39,7 +39,9 @@ app.use(express.static("public"));
 app.use(morgan("tiny"));
 
 app.get("/", async (_req, res) => {
-  res.render("index.ejs", {});
+  const book_query = await db.query("SELECT * FROM book");
+  const books = book_query.rows;
+  res.render("index.ejs", { categories: categories, books: books });
 });
 
 app.post("/add", async (req, res) => {
@@ -102,7 +104,7 @@ app.get("/api/ai_abstract", async (req, res) => {
   const title = req.query.title;
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_KEY);
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-  const prompt = `Provide a 50-100 word abstract for the Book ${title} by ${author}`;
+  const prompt = `Provide a 20-30 word abstract for the Book ${title} by ${author}`;
   const result = await model.generateContent(prompt);
   const text = result.response.candidates[0].content.parts[0].text;
   return res.send(text);
