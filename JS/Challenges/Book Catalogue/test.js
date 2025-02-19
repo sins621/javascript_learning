@@ -37,10 +37,12 @@ const categories = [
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 app.use(morgan("tiny"));
+app.use(express.static("public"));
 
 app.get("/", async (_req, res) => {
   const book_query = await db.query("SELECT * FROM book");
   const books = book_query.rows;
+  console.log(books);
   res.render("index.ejs", { categories: categories, books: books });
 });
 

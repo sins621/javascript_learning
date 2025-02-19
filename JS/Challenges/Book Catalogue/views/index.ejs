@@ -10,25 +10,48 @@
       integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
       crossorigin="anonymous"
     />
+    <link rel="stylesheet" href="./styles/main.css" />
   </head>
   <style></style>
   <body>
-    <header class="navbar navbar-expand-lg sticky-top" style="background: blue">
-      <div class="container" style="background: teal">
-        <ul>
-          <li>Li 1</li>
-          <li>Li 2</li>
-          <li>Li 3</li>
-          <li>Li 4</li>
-        </ul>
+    <header class="navbar navbar-expand-lg sticky-top">
+      <div class="container headers align-items-end py-3">
+        <div>
+          <a class="navbar-brand float-start" href="#">
+            <img src="./img/logo/Logo_Cropped.png" width="150" />
+          </a>
+        </div>
+
+        <div class="d-flex">
+          <ul class="me-3">
+            <li>Cool</li>
+            <li>cool2</li>
+          </ul>
+          <form class="d-flex" role="search">
+            <input
+              class="form-control me-2"
+              type="search"
+              placeholder="Search"
+              aria-label="Search"
+            />
+            <button
+              class="btn btn-outline-success"
+              id="search-button"
+              type="submit"
+            >
+              Search
+            </button>
+          </form>
+        </div>
       </div>
     </header>
-    <div class="container my-3" style="background: red">
+    <div class="container my-3">
       <main>
         <% if (locals.books && locals.categories) { %> <%
-        categories.forEach((category) => { %>
-        <h1><%= category %></h1>
-        <div class="row">
+        categories.forEach((category) => { %> <% if (books.some(book =>
+        book.category === category)) { %>
+        <h1 id="section-heading"><%= category %></h1>
+        <div class="row mt-3">
           <% books.forEach((book) => { %> <% if (book.category == category) { %>
           <div class="col-lg-4 mb-2">
             <div class="cleafix">
@@ -46,11 +69,11 @@
           </div>
           <% } %> <% }); %>
         </div>
-        <% }); %> <% } %>
+        <% } %><% }); %> <% } %>
       </main>
     </div>
     <footer>
-      <div class="container" style="background: yellow">
+      <div class="container">
         <p>This is the footer</p>
       </div>
     </footer>

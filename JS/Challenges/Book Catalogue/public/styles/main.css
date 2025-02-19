@@ -1,0 +1,25 @@
+:root {
+  --harvest-gold: #db9228ff;
+  --seal-brown: #632d1cff;
+  --seal-brown-2: #651f04ff;
+  --mahogany: #bb4105ff;
+  --off-red-rgb: #e90000ff;
+}
+
+.navbar {
+  background: white;
+}
+
+.headers {
+  border-bottom: 1px solid var(--seal-brown-2);
+}
+
+#section-heading {
+  border-bottom: 1px solid var(--seal-brown-2);
+  color: var(--seal-brown);
+}
+
+#search-button {
+  color: var(--harvest-gold);
+  border: 1px solid var(--harvest-gold);
+}
