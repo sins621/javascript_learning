@@ -11,9 +11,9 @@ const port = 3000;
 
 const db = new pg.Client({
   user: "postgres",
-  host: process.env.db_host,
+  host: process.env.DB_HOST,
   database: "book_website",
-  password: process.env.db_pass,
+  password: process.env.DB_PASS,
   port: 5432,
 });
 db.connect();
@@ -62,6 +62,7 @@ app.post("/add", async (req, res) => {
     .get(url, { params: params })
     .then(function (response) {
       const books = response.data;
+      console.log(books);
       res.render("add_book.ejs", { books: books, categories: categories });
     })
     .catch(function (error) {
