@@ -6,6 +6,10 @@
   --off-red-rgb: #e90000ff;
 }
 
+body {
+  margin: 10px;
+}
+
 h1 {
   color: var(--seal-brown);
 }
@@ -81,6 +85,6 @@ header {
   top: 0;
 }
 
-.section-heading{
+.section-heading {
   margin: 10px 0px;
 }
