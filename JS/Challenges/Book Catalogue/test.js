@@ -4,15 +4,16 @@ import morgan from "morgan";
 import pg from "pg";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import axios from "axios";
+import "dotenv/config";
 
 const app = express();
 const port = 3000;
 
 const db = new pg.Client({
   user: "postgres",
-  host: "localhost",
+  host: process.env.db_host,
   database: "book_website",
-  password: "123456",
+  password: process.env.db_pass,
   port: 5432,
 });
 db.connect();
