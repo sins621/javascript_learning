@@ -15,6 +15,9 @@
             <img src="./img/logo/Logo_Cropped.png" width="100" />
           </a>
         </div>
+        <div>
+          <h1>Knowl & Tree Bookstore</h1>
+        </div>
 
         <div class="nav">
           <nav>
@@ -24,34 +27,39 @@
           </nav>
         </div>
       </div>
-    </header>
-    <hr />
-    <div class="categories">
-      <ul>
+      <hr />
+      <div class="categories">
         <% if (locals.categories) { %> <% categories.forEach((category)=> { %>
-        <li><%= category %></li>
-        <% }); %> <% } %>
-      </ul>
-    </div>
+        <% if (books.some(book=> book.category === category)) { %>
+        <a href="#<%=category%>" class="category"><%= category %></a>
+        <% } %> <% }); %> <% } %>
+      </div>
+      <hr />
+    </header>
     <div>
       <main>
         <% if (locals.books && locals.categories) { %> <%
         categories.forEach((category)=> { %> <% if (books.some(book=>
         book.category === category)) { %>
-        <h1 id="section-heading"><%= category %></h1>
-        <div>
+        <h2 class="section-heading">
+          <a id="<%=category%>"><%= category %></a>
+        </h2>
+        <div class="books">
           <% books.forEach((book)=> { %> <% if (book.category==category) { %>
           <div>
             <div>
               <img
+                class="cover-photo"
                 src="https://covers.openlibrary.org/b/id/<%= book.cover_id %>-M.jpg"
               />
-              <h5><%= book.title %></h5>
-              <h6><%= book.author %> <%= book.publish_year %></h6>
-              <p>
-                <strong>R<%= book.price %></strong><br />
-                <%= book.abstract %>
-              </p>
+              <div class="book-content">
+                <h3><%= book.title %></h3>
+                <h4><%= book.author %> <%= book.publish_year %></h4>
+                <p>
+                  <strong>R<%= book.price %></strong><br />
+                  <%= book.abstract %>
+                </p>
+              </div>
             </div>
           </div>
           <% } %> <% }); %>

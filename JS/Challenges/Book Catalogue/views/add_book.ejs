@@ -6,40 +6,58 @@
 
 <form action="/submit" method="post">
   <% if (locals.books) { %>
-    <h1>Books found</h1>
-    <select name="book" class="form-select mb-1" aria-label="Default select example" id="book_select">
-      <option selected>Select the Correct Book</option>
-      <% locals.books.docs.forEach((book)=> { %>
-        <option value="<%= JSON.stringify(book) %>">
-          <%= book.title %>
-            <%= (book.publish_year && Array.isArray(book.publish_year) && book.publish_year.length> 0) ?
-              book.publish_year[0] : "N/A" %>
-        </option>
-        <% }) %>
-    </select>
+  <h1>Books found</h1>
+  <select
+    name="book"
+    class="form-select mb-1"
+    aria-label="Default select example"
+    id="book_select"
+  >
+    <option selected>Select the Correct Book</option>
+    <% locals.books.docs.forEach((book)=> { %>
+    <option value="<%= JSON.stringify(book) %>">
+      <%= book.title %> <%= (book.publish_year &&
+      Array.isArray(book.publish_year) && book.publish_year.length> 0) ?
+      book.publish_year[0] : "N/A" %>
+    </option>
+    <% }) %>
+  </select>
 
-    <h2>Abstract:</h2>
-    <textarea name="abstract" class="form-control mb-2" aria-label="With textarea"
-      placeholder="Enter an Abstract for the Book or Generate with AI" id="abstract_text"></textarea>
-    <button type="button" class="btn btn-primary mb-2" onclick="genAbstract()">
-      Generate
-    </button>
+  <h2>Abstract:</h2>
+  <textarea
+    name="abstract"
+    class="form-control mb-2"
+    aria-label="With textarea"
+    placeholder="Enter an Abstract for the Book or Generate with AI"
+    id="abstract_text"
+  ></textarea>
+  <button type="button" class="btn btn-primary mb-2" onclick="genAbstract()">
+    Generate
+  </button>
 
-    <input class="mb-1" type="text" name="quantity" placeholder="Quantity" /><br />
-    <input class="mb-2" type="text" name="price" placeholder="Price" /><br />
+  <input
+    class="mb-1"
+    type="text"
+    name="quantity"
+    placeholder="Quantity"
+  /><br />
+  <input class="mb-2" type="text" name="price" placeholder="Price" /><br />
 
-    <% if (locals.categories) { %>
-      <select name="category" class="form-select mb-2" aria-label="Default select example" id="category_select">
-        <option selected>Select a Category</option>
-        <% categories.forEach((category)=> { %>
-          <option value="<%= category %>">
-            <%= category %>
-          </option>
-          <% }) %>
-      </select>
-      <% } %>
-        <input class="mb-1" type="submit" value="Submit" />
-        <% } %>
+  <% if (locals.categories) { %>
+  <select
+    name="category"
+    class="form-select mb-2"
+    aria-label="Default select example"
+    id="category_select"
+  >
+    <option selected>Select a Category</option>
+    <% categories.forEach((category)=> { %>
+    <option value="<%= category %>"><%= category %></option>
+    <% }) %>
+  </select>
+  <% } %>
+  <input class="mb-1" type="submit" value="Submit" />
+  <% } %>
 </form>
 
 <script>
