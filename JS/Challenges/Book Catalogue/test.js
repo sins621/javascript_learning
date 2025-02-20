@@ -43,7 +43,6 @@ app.use(express.static("public"));
 app.get("/", async (_req, res) => {
   const book_query = await db.query("SELECT * FROM book");
   const books = book_query.rows;
-  console.log(books);
   res.render("index.ejs", { categories: categories, books: books });
 });
 
@@ -62,7 +61,6 @@ app.post("/add", async (req, res) => {
     .get(url, { params: params })
     .then(function (response) {
       const books = response.data;
-      console.log(books);
       res.render("add_book.ejs", { books: books, categories: categories });
     })
     .catch(function (error) {
@@ -98,7 +96,7 @@ app.post("/submit", async (req, res) => {
   ];
   db.query(
     "INSERT INTO book (title, author, category, publish_year, abstract, cover_id, quantity, price) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
-    values_to_add
+    values_to_add,
   );
   res.redirect("/");
 });

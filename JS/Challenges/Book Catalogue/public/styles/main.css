@@ -6,20 +6,22 @@
   --off-red-rgb: #e90000ff;
 }
 
-.navbar {
-  background: white;
+* {
+  margin: 0;
+  padding: 0;
 }
 
-.headers {
-  border-bottom: 1px solid var(--seal-brown-2);
+.titlebar {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
-#section-heading {
-  border-bottom: 1px solid var(--seal-brown-2);
-  color: var(--seal-brown);
+.nav {
+  font-size: larger;
 }
 
-#search-button {
-  color: var(--harvest-gold);
-  border: 1px solid var(--harvest-gold);
+li {
+  display: inline;
 }

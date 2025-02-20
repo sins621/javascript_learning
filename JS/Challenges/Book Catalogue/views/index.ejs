@@ -4,59 +4,46 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Books</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-      crossorigin="anonymous"
-    />
     <link rel="stylesheet" href="./styles/main.css" />
   </head>
-  <style></style>
+
   <body>
-    <header class="navbar navbar-expand-lg sticky-top">
-      <div class="container headers align-items-end py-3">
+    <header>
+      <div class="titlebar">
         <div>
-          <a class="navbar-brand float-start" href="#">
-            <img src="./img/logo/Logo_Cropped.png" width="150" />
+          <a href="#">
+            <img src="./img/logo/Logo_Cropped.png" width="100" />
           </a>
         </div>
 
-        <div class="d-flex">
-          <ul class="me-3">
-            <li>Cool</li>
-            <li>cool2</li>
-          </ul>
-          <form class="d-flex" role="search">
-            <input
-              class="form-control me-2"
-              type="search"
-              placeholder="Search"
-              aria-label="Search"
-            />
-            <button
-              class="btn btn-outline-success"
-              id="search-button"
-              type="submit"
-            >
-              Search
-            </button>
-          </form>
+        <div class="nav">
+          <nav>
+            <a href="#">About</a>
+            <a href="#">Contact</a>
+            <a href="/add">Add</a>
+          </nav>
         </div>
       </div>
     </header>
-    <div class="container my-3">
+    <hr />
+    <div class="categories">
+      <ul>
+        <% if (locals.categories) { %> <% categories.forEach((category) => { %>
+        <li><%= category %></li>
+        <% }); %> <% } %>
+      </ul>
+    </div>
+    <div>
       <main>
         <% if (locals.books && locals.categories) { %> <%
-        categories.forEach((category) => { %> <% if (books.some(book =>
+        categories.forEach((category)=> { %> <% if (books.some(book=>
         book.category === category)) { %>
         <h1 id="section-heading"><%= category %></h1>
-        <div class="row mt-3">
-          <% books.forEach((book) => { %> <% if (book.category == category) { %>
-          <div class="col-lg-4 mb-2">
-            <div class="cleafix">
+        <div>
+          <% books.forEach((book)=> { %> <% if (book.category==category) { %>
+          <div>
+            <div>
               <img
-                class="img-fluid rounded float-start col-lg-6 me-3"
                 src="https://covers.openlibrary.org/b/id/<%= book.cover_id %>-M.jpg"
               />
               <h5><%= book.title %></h5>
@@ -69,11 +56,11 @@
           </div>
           <% } %> <% }); %>
         </div>
-        <% } %><% }); %> <% } %>
+        <%} %> <% }); %> <% } %>
       </main>
     </div>
     <footer>
-      <div class="container">
+      <div>
         <p>This is the footer</p>
       </div>
     </footer>
