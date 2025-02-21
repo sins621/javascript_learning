@@ -57,7 +57,6 @@
                 <h4><%= book.author %> <%= book.publish_year %></h4>
                 <p>
                   <strong>R<%= book.price %></strong><br />
-                  <%= book.abstract %>
                 </p>
               </div>
             </div>
@@ -67,10 +66,33 @@
         <%} %> <% }); %> <% } %>
       </main>
     </div>
+    <hr />
     <footer>
-      <div>
-        <p>This is the footer</p>
+      <div class="footer-container">
+        <div class="services">
+          <h3>Services</h3>
+          <p>Get a Quote</p>
+          <p>Careers</p>
+          <p>Wishlists</p>
+          <p>Gift Vouchers</p>
+        </div>
+        <div class="contact">
+          <h3>Contact</h3>
+          <p>Tel: 012 213 4134</p>
+          <p>Locations</p>
+          <p>Contact Details</p>
+          <p>Returns & Completions</p>
+        </div>
+        <div class="newsletter">
+          <h3>Newsletter</h3>
+          <form action="/subscribe" method="post">
+            <input type="email" name="mail" placeholder="email" /><br />
+            <input type="submit" value="Subscribe" />
+          </form>
+        </div>
       </div>
+      <hr />
+      <p class="copyright">Copyright 2025</p>
     </footer>
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"

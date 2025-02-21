@@ -115,27 +115,3 @@ app.get("/api/ai_abstract", async (req, res) => {
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
-
-// axios
-//   .get(url, {
-//     params: params,
-//   })
-//   .then(function (response) {
-//     console.log(response.data);
-//   })
-//   .catch(function (error) {});
-
-// const app = express();
-// const port = 3000;
-
-// const genAI = new GoogleGenerativeAI(process.env.GEMINI_KEY);
-// const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-// const prompt =
-//   "Provide a 50-100 word abstract for the Book Lord of The Rings by R R Tolkein";
-
-// const result = await model.generateContent(prompt);
-// console.log(result.response.text());
-
-// app.use(bodyParser.urlencoded({ extended: true }));
-// app.use(express.static("public"));

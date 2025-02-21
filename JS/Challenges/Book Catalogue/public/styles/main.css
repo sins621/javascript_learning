@@ -21,11 +21,12 @@ h1 {
   margin: 0px 10px 10px 0px;
 }
 
-.books {
+
+/* .books {
   display: grid;
   grid-template-columns: repeat(1, auto);
   gap: 15px;
-}
+} */
 
 .titlebar {
   display: flex;
@@ -35,18 +36,48 @@ h1 {
   align-items: center;
 }
 
+.books {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 15px;
+}
+
+header {
+  background-color: white;
+  position: static;
+  top: 0;
+}
+
+.footer-container {
+  display: grid;
+  grid-template-columns: repeat(1fr);
+}
+
+.copyright {
+  text-align: center;
+}
+
 @media (min-width: 700px) {
   .books {
-    grid-template-columns: repeat(2, auto);
+    grid-template-columns: repeat(3, 1fr);
   }
+
   .titlebar {
     flex-direction: row;
+  }
+
+  header {
+    position: sticky;
+  }
+
+  .footer-container {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
 @media (min-width: 1000px) {
   .books {
-    grid-template-columns: repeat(3, auto);
+    grid-template-columns: repeat(5, 1fr);
   }
 }
 
@@ -80,16 +111,10 @@ hr {
   border-color: var(--seal-brown);
 }
 
-header {
-  background-color: white;
-  position: sticky;
-  top: 0;
-}
-
 .section-heading {
   margin: 10px 0px;
 }
 
-.book-content{
+.book-content {
   text-align: justify;
 }
