@@ -1,41 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Books</title>
-    <link rel="stylesheet" href="./styles/main.css" />
+    <%- include ('partials/head') %>
   </head>
-
   <body>
-    <header>
-      <div class="titlebar">
-        <div>
-          <a href="#">
-            <img src="./img/logo/Logo_Cropped.png" width="100" />
-          </a>
-        </div>
-        <div>
-          <h1>Knowl & Tree Bookstore</h1>
-        </div>
-
-        <div class="nav">
-          <nav>
-            <a href="#">About</a>
-            <a href="#">Contact</a>
-            <a href="/add">Add</a>
-          </nav>
-        </div>
-      </div>
-      <hr />
-      <div class="categories">
-        <% if (locals.categories) { %> <% categories.forEach((category)=> { %>
-        <% if (books.some(book=> book.category === category)) { %>
-        <a href="#<%=category%>" class="category"><%= category %></a>
-        <% } %> <% }); %> <% } %>
-      </div>
-      <hr />
-    </header>
+    <%- include ('partials/header') %>
+    <div class="categories">
+      <% if (locals.categories) { %> <% categories.forEach((category)=> { %> <%
+      if (books.some(book=> book.category === category)) { %>
+      <a href="#<%=category%>" class="category"><%= category %></a>
+      <% } %> <% }); %> <% } %>
+    </div>
+    <hr />
     <div>
       <main>
         <% if (locals.books && locals.categories) { %> <%
@@ -48,16 +24,16 @@
           <% books.forEach((book)=> { %> <% if (book.category==category) { %>
           <div>
             <div>
-              <img
-                class="cover-photo"
-                src="https://covers.openlibrary.org/b/id/<%= book.cover_id %>-M.jpg"
-              />
+              <a href="<%= url_for('book', {book_id : book.id}) %>">
+                <img
+                  class="cover-photo"
+                  src="https://covers.openlibrary.org/b/id/<%= book.cover_id %>-M.jpg"
+                />
+              </a>
               <div class="book-content">
                 <h3><%= book.title %></h3>
                 <h4><%= book.author %> <%= book.publish_year %></h4>
-                <p>
-                  <strong>R<%= book.price %></strong><br />
-                </p>
+                <p><strong>R<%= book.price %></strong><br /></p>
               </div>
             </div>
           </div>
@@ -66,38 +42,6 @@
         <%} %> <% }); %> <% } %>
       </main>
     </div>
-    <hr />
-    <footer>
-      <div class="footer-container">
-        <div class="services">
-          <h3>Services</h3>
-          <p>Get a Quote</p>
-          <p>Careers</p>
-          <p>Wishlists</p>
-          <p>Gift Vouchers</p>
-        </div>
-        <div class="contact">
-          <h3>Contact</h3>
-          <p>Tel: 012 213 4134</p>
-          <p>Locations</p>
-          <p>Contact Details</p>
-          <p>Returns & Completions</p>
-        </div>
-        <div class="newsletter">
-          <h3>Newsletter</h3>
-          <form action="/subscribe" method="post">
-            <input type="email" name="mail" placeholder="email" /><br />
-            <input type="submit" value="Subscribe" />
-          </form>
-        </div>
-      </div>
-      <hr />
-      <p class="copyright">Copyright 2025</p>
-    </footer>
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-      integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-      crossorigin="anonymous"
-    ></script>
+    <%- include ('partials/footer') %>
   </body>
 </html>

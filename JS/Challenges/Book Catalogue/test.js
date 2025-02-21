@@ -96,9 +96,20 @@ app.post("/submit", async (req, res) => {
   ];
   db.query(
     "INSERT INTO book (title, author, category, publish_year, abstract, cover_id, quantity, price) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
-    values_to_add,
+    values_to_add
   );
   res.redirect("/");
+});
+
+app.get("/book", async (req, res) => {
+  const book_id = req.query.book_id;
+  console.log(book_id);
+  const book_query = await db.query("SELECT * FROM book WHERE id = $1", [
+    book_id,
+  ]);
+  const book = book_query.rows[0];
+  console.log(book);
+  return res.render("book.ejs", { book: book });
 });
 
 app.get("/api/ai_abstract", async (req, res) => {
@@ -115,3 +126,8 @@ app.get("/api/ai_abstract", async (req, res) => {
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
+
+app.locals.url_for = function (route, params = {}) {
+  const queryString = new URLSearchParams(params).toString();
+  return queryString ? `${route}?${queryString}` : route;
+};

@@ -14,19 +14,16 @@ h1 {
   color: var(--seal-brown);
 }
 
+a {
+  text-decoration: none;
+}
+
 .cover-photo {
   float: left;
   width: 100px;
   height: auto;
   margin: 0px 10px 10px 0px;
 }
-
-
-/* .books {
-  display: grid;
-  grid-template-columns: repeat(1, auto);
-  gap: 15px;
-} */
 
 .titlebar {
   display: flex;
@@ -55,6 +52,22 @@ header {
 
 .copyright {
   text-align: center;
+}
+
+.book-focus {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  grid-template-rows: 1fr 2fr 1fr;
+}
+
+.cover-focus {
+  grid-column: 1;
+  grid-row: span 3;
+}
+
+.price-focus {
+  display: flex;
+  justify-content: space-between;
 }
 
 @media (min-width: 700px) {

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <%- include ('partials/head') %>
+  </head>
+  <body>
+    <%- include ('partials/header') %>
+    <div class="book-focus">
+      <div class="cover-focus">
+        <img
+          src="https://covers.openlibrary.org/b/id/<%= book.cover_id %>-L.jpg"
+        />
+      </div>
+      <div class="book-info-focus">
+        <h3><%= book.title %></h3>
+        <h4><%= book.author %> <%= book.publish_year %></h4>
+      </div>
+      <div class="abstract-focus">
+        <p><%= book.abstract %></p>
+      </div>
+      <div class="price-focus">
+        <p><strong>R<%= book.price %></strong></p>
+        <button>Purchase</button>
+      </div>
+    </div>
+    <%- include ('partials/footer') %>
+  </body>
+</html>
