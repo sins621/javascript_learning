@@ -7,7 +7,7 @@
     <%- include ('partials/header') %>
     <div class="book-focus">
       <div class="cover-focus">
-        <img width = "150px"
+        <img id = "cover" 
           src="https://covers.openlibrary.org/b/id/<%= book.cover_id %>-L.jpg"
         />
       </div>
@@ -20,7 +20,7 @@
       </div>
       <div class="price-focus">
         <p><strong>R<%= book.price %></strong></p>
-        <button>Purchase</button>
+        <button id="purchase-button">Add to Cart</button>
       </div>
     </div>
     <%- include ('partials/footer') %>

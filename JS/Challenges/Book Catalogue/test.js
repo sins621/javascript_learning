@@ -16,6 +16,7 @@ const db = new pg.Client({
   password: process.env.DB_PASS,
   port: 5432,
 });
+
 db.connect();
 
 const categories = [
@@ -42,6 +43,14 @@ app.use(express.static("public"));
 
 app.get("/", async (_req, res) => {
   const book_query = await db.query("SELECT * FROM book");
+  const books = book_query.rows;
+  res.render("index.ejs", { categories: categories, books: books });
+});
+
+app.get("/filter", async (req, res) => {
+  const book_query = await db.query("SELECT * FROM book where category=$1", [
+    req.query.category,
+  ]);
   const books = book_query.rows;
   res.render("index.ejs", { categories: categories, books: books });
 });
@@ -74,7 +83,6 @@ app.get("/add", async (req, res) => {
 });
 
 app.post("/submit", async (req, res) => {
-  console.log(req.body);
   const book = JSON.parse(req.body.book);
   const title = book.title;
   const author = book.author_name[0];
@@ -96,19 +104,17 @@ app.post("/submit", async (req, res) => {
   ];
   db.query(
     "INSERT INTO book (title, author, category, publish_year, abstract, cover_id, quantity, price) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
-    values_to_add
+    values_to_add,
   );
   res.redirect("/");
 });
 
 app.get("/book", async (req, res) => {
   const book_id = req.query.book_id;
-  console.log(book_id);
   const book_query = await db.query("SELECT * FROM book WHERE id = $1", [
     book_id,
   ]);
   const book = book_query.rows[0];
-  console.log(book);
   return res.render("book.ejs", { book: book });
 });
 

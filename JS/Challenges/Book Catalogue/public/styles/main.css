@@ -57,23 +57,38 @@ header {
 .book-focus {
   display: grid;
   grid-template-columns: 1fr 2fr;
-  grid-template-rows: 1fr 2fr 1fr;
+  grid-template-rows: auto 2fr auto;
+  gap: 10px;
+  margin: 20px 0px;
 }
 
 .cover-focus {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
   grid-column: 1;
-  grid-row: span 3;
+  grid-row: span 4;
+}
+
+#purchase-button{
+  height: 20px;
+}
+
+#cover {
+  width: 150px;
+  height: max-content;
 }
 
 .book-info-focus {
   display: flex;
-  align-self: flex-end;
+  flex-direction: column;
+  align-self: center;
   flex-wrap: wrap;
 }
 
 .price-focus {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-evenly;
 }
 
 @media (min-width: 700px) {
@@ -87,6 +102,10 @@ header {
 
   header {
     position: sticky;
+  }
+
+  .book-info-focus, .abstract-focus, .price-focus {
+    width: 50vw;
   }
 
   .footer-container {
