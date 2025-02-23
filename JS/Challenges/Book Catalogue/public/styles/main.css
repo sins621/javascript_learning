@@ -65,6 +65,12 @@ header {
   grid-row: span 3;
 }
 
+.book-info-focus {
+  display: flex;
+  align-self: flex-end;
+  flex-wrap: wrap;
+}
+
 .price-focus {
   display: flex;
   justify-content: space-between;
