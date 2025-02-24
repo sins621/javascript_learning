@@ -2,6 +2,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import pg from "pg";
 import bcrypt from "bcrypt";
+import "dotenv/config";
 
 const app = express();
 const port = 3000;
@@ -9,11 +10,12 @@ const saltRounds = 10;
 
 const db = new pg.Client({
   user: "postgres",
-  host: "localhost",
+  host: process.env.DB_HOST,
   database: "secrets",
-  password: "123456",
+  password: process.env.DB_PASS,
   port: 5432,
 });
+
 db.connect();
 
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -63,7 +65,7 @@ app.post("/register", async (req, res) => {
 
 app.post("/login", async (req, res) => {
   const email = req.body.username;
-  const password = req.body.password;
+  const loginPassword = req.body.password;
 
   try {
     const result = await db.query("SELECT * FROM users WHERE email = $1", [
@@ -72,6 +74,19 @@ app.post("/login", async (req, res) => {
     if (result.rows.length > 0) {
       const user = result.rows[0];
       const storedPassword = user.password;
+
+      bcrypt.compare(loginPassword, storedPassword, (err, result) => {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log(result);
+          if (!result) {
+            res.send("Incorrect Password");
+          } else {
+            res.render("secrets.ejs");
+          }
+        }
+      });
 
       if (password === storedPassword) {
         res.render("secrets.ejs");
