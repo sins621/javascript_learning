@@ -35,3 +35,4 @@ typings/
 # Yarn Integrity file
 .yarn-integrity
 JS/Challenges/Book Catalogue/.env
+.env
