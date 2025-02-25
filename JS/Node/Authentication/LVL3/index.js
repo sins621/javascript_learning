@@ -36,15 +36,15 @@ const db = new pg.Client({
 });
 db.connect();
 
-app.get("/", (req, res) => {
+app.get("/", (_req, res) => {
   res.render("home.ejs");
 });
 
-app.get("/login", (req, res) => {
+app.get("/login", (_req, res) => {
   res.render("login.ejs");
 });
 
-app.get("/logout", (_req, res) => {
+app.get("/logout", (req, res) => {
   req.logout((err) => {
     if (err) {
       console.log(err);
@@ -54,7 +54,7 @@ app.get("/logout", (_req, res) => {
   });
 });
 
-app.get("/register", (req, res) => {
+app.get("/register", (_req, res) => {
   res.render("register.ejs");
 });
 
@@ -68,7 +68,6 @@ app.get("/logout", (req, res) => {
 });
 
 app.get("/secrets", (req, res) => {
-  console.log(req.user);
   if (req.isAuthenticated()) {
     res.render("secrets.ejs");
   } else {

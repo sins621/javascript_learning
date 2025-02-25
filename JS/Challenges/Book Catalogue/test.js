@@ -5,8 +5,26 @@ import pg from "pg";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import axios from "axios";
 import "dotenv/config";
+import bcrypt from "bcrypt";
+import passport from "passport";
+import { Strategy } from "passport-local";
+import session from "express-session";
 
 const app = express();
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: true,
+  }),
+);
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static("public"));
+app.use(morgan("tiny"));
+app.use(express.static("public"));
+app.use(passport.initialize());
+app.use(passport.session());
+
 const port = 3000;
 
 const db = new pg.Client({
@@ -36,10 +54,12 @@ const categories = [
   "Non-fiction",
 ];
 
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static("public"));
-app.use(morgan("tiny"));
-app.use(express.static("public"));
+const salt_rounds = 10;
+
+app.locals.url_for = function (route, params = {}) {
+  const queryString = new URLSearchParams(params).toString();
+  return queryString ? `${route}?${queryString}` : route;
+};
 
 app.get("/", async (_req, res) => {
   const book_query = await db.query("SELECT * FROM book");
@@ -78,7 +98,7 @@ app.post("/add", async (req, res) => {
     });
 });
 
-app.get("/add", async (req, res) => {
+app.get("/add", async (_req, res) => {
   res.render("add_book.ejs");
 });
 
@@ -118,6 +138,112 @@ app.get("/book", async (req, res) => {
   return res.render("book.ejs", { book: book });
 });
 
+app.get("/login", (_req, res) => {
+  res.render("login.ejs");
+});
+
+app.get("/logout", (req, res) => {
+  req.logout((err) => {
+    if (err) {
+      console.log(err);
+    } else {
+      res.redirect("/");
+    }
+  });
+});
+
+app.get("/register", (_req, res) => {
+  res.render("register.ejs");
+});
+
+app.get("/logout", (req, res) => {
+  req.logout(function (err) {
+    if (err) {
+      return next(err);
+    }
+    res.redirect("/");
+  });
+});
+
+app.post(
+  "/login",
+  passport.authenticate("local", {
+    successRedirect: "/",
+    failureRedirect: "/login",
+  }),
+);
+
+app.post("/register", async (req, res) => {
+  const email = req.body.username;
+  const password = req.body.password;
+
+  try {
+    const check_result = await db.query("SELECT * FROM users WHERE email = $1", [
+      email,
+    ]);
+
+    if (check_result.rows.length > 0) {
+      req.redirect("/login");
+    } else {
+      bcrypt.hash(password, salt_rounds, async (err, hash) => {
+        if (err) {
+          console.error("Error hashing password:", err);
+        } else {
+          const result = await db.query(
+            "INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *",
+            [email, hash],
+          );
+          const user = result.rows[0];
+          req.login(user, (_err) => {
+            console.log("success");
+            res.redirect("/");
+          });
+        }
+      });
+    }
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+passport.use(
+  "local",
+  new Strategy(async function verify(username, password, cb) {
+    try {
+      const result = await db.query("SELECT * FROM users WHERE email = $1 ", [
+        username,
+      ]);
+      if (result.rows.length > 0) {
+        const user = result.rows[0];
+        const storedHashedPassword = user.password;
+        bcrypt.compare(password, storedHashedPassword, (err, valid) => {
+          if (err) {
+            console.error("Error comparing passwords:", err);
+            return cb(err);
+          } else {
+            if (valid) {
+              return cb(null, user);
+            } else {
+              return cb(null, false);
+            }
+          }
+        });
+      } else {
+        return cb("User not found");
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  }),
+);
+
+passport.serializeUser((user, cb) => {
+  cb(null, user);
+});
+passport.deserializeUser((user, cb) => {
+  cb(null, user);
+});
+
 app.get("/api/ai_abstract", async (req, res) => {
   const author = req.query.author;
   const title = req.query.title;
@@ -132,8 +258,3 @@ app.get("/api/ai_abstract", async (req, res) => {
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
-
-app.locals.url_for = function (route, params = {}) {
-  const queryString = new URLSearchParams(params).toString();
-  return queryString ? `${route}?${queryString}` : route;
-};
