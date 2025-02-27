@@ -10,24 +10,24 @@ import passport from "passport";
 import { Strategy } from "passport-local";
 import session from "express-session";
 
-const app = express();
-app.use(
+const APP = express();
+APP.use(
   session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
   }),
 );
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static("public"));
-app.use(morgan("tiny"));
-app.use(express.static("public"));
-app.use(passport.initialize());
-app.use(passport.session());
+APP.use(bodyParser.urlencoded({ extended: true }));
+APP.use(express.static("public"));
+APP.use(morgan("tiny"));
+APP.use(express.static("public"));
+APP.use(passport.initialize());
+APP.use(passport.session());
 
-const port = 3000;
+const PORT = 3000;
 
-const db = new pg.Client({
+const DB = new pg.Client({
   user: "postgres",
   host: process.env.DB_HOST,
   database: "book_website",
@@ -35,9 +35,9 @@ const db = new pg.Client({
   port: 5432,
 });
 
-db.connect();
+DB.connect();
 
-const categories = [
+const CATEGORIES = [
   "Fantasy",
   "Horror",
   "Historical Fiction",
@@ -54,138 +54,132 @@ const categories = [
   "Non-fiction",
 ];
 
-const salt_rounds = 10;
+const SALT_ROUNDS = 10;
 let user = null;
 
-app.locals.url_for = function (route, params = {}) {
-  const queryString = new URLSearchParams(params).toString();
-  return queryString ? `${route}?${queryString}` : route;
+APP.locals.url_for = function (route, params = {}) {
+  const QUERY_STRING = new URLSearchParams(params).toString();
+  return QUERY_STRING ? `${route}?${QUERY_STRING}` : route;
 };
 
-app.get("/", async (req, res) => {
-  if (req.isAuthenticated) {
+// Home
+APP.get("/", async (req, res) => {
+  if (req.isAuthenticated()) {
     user = req.user;
+    console.log(user);
   }
 
-  const book_query = await db.query("SELECT * FROM book");
-  const books = book_query.rows;
-  res.render("index.ejs", {
-    categories: categories,
-    books: books,
+  const BOOK_QUERY = await DB.query("SELECT * FROM book");
+  const BOOKS = BOOK_QUERY.rows;
+  return res.render("index.ejs", {
+    categories: CATEGORIES,
+    books: BOOKS,
     user: user,
   });
 });
 
-app.get("/filter", async (req, res) => {
-  if (req.isAuthenticated) {
+APP.get("/filter", async (req, res) => {
+  if (req.isAuthenticated()) {
     user = req.user;
   }
-  const book_query = await db.query("SELECT * FROM book where category=$1", [
+  const BOOK_QUERY = await DB.query("SELECT * FROM book where category=$1", [
     req.query.category,
   ]);
-  const books = book_query.rows;
-  res.render("index.ejs", { categories: categories, books: books, user: user });
+  const BOOKS = BOOK_QUERY.rows;
+  return res.render("index.ejs", {
+    categories: CATEGORIES,
+    books: BOOKS,
+    user: user,
+  });
 });
 
-app.post("/add", async (req, res) => {
-  const author = req.body.author;
-  const title = req.body.title;
-  const url = "https://openlibrary.org/search.json";
-  const params = {
-    title: title,
-    author: author,
+APP.post("/add", async (req, res) => {
+  const URL = "https://openlibrary.org/search.json";
+  const PARAMS = {
+    author: req.body.author,
+    title: req.body.title,
     limit: 5,
     fields: "title,author_name,cover_i, publish_year",
   };
 
-  axios
-    .get(url, { params: params })
-    .then(function (response) {
-      const books = response.data;
-      res.render("add_book.ejs", { books: books, categories: categories });
-    })
-    .catch(function (error) {
-      console.log(error);
-      res.status(500);
-    });
-});
+  try {
+    const BOOK_DATA = await axios.get(URL, { params: PARAMS });
+    const BOOKS = BOOK_DATA.data;
 
-app.get("/add", async (req, res) => {
-  if (req.isAuthenticated) {
-    res.render("add_book.ejs");
-  } else {
-    res.render("login.ejs");
+    return res.render("add_book.ejs", { books: BOOKS, categories: CATEGORIES });
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500);
   }
 });
 
-app.post("/submit", async (req, res) => {
-  const book = JSON.parse(req.body.book);
-  const title = book.title;
-  const author = book.author_name[0];
-  const category = req.body.category;
-  const publish_year = book.publish_year[0];
-  const abstract = req.body.abstract;
-  const cover_id = book.cover_i;
-  const quantity = req.body.quantity;
-  const price = req.body.price;
-  const values_to_add = [
-    title,
-    author,
-    category,
-    publish_year,
-    abstract,
-    cover_id,
-    quantity,
-    price,
+APP.get("/add", async (req, res) => {
+  if (req.isAuthenticated() === false) return res.render("login.ejs");
+
+  if (req.user.role != "admin") return res.redirect("/");
+
+  return res.render("add_book.ejs");
+});
+
+APP.post("/submit", async (req, res) => {
+  const BOOK = JSON.parse(req.body.book);
+  const VALUES_TO_ADD = [
+    BOOK.title,
+    BOOK.author_name[0],
+    req.body.category,
+    BOOK.publish_year[0],
+    req.body.abstract,
+    BOOK.cover_i,
+    req.body.quantity,
+    req.body.price,
   ];
-  db.query(
+
+  DB.query(
     "INSERT INTO book (title, author, category, publish_year, abstract, cover_id, quantity, price) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
-    values_to_add,
+    VALUES_TO_ADD,
   );
-  res.redirect("/");
+
+  return res.redirect("/");
 });
 
-app.get("/book", async (req, res) => {
-  if (req.isAuthenticated) {
-    user = req.user;
-  }
-  const book_id = req.query.book_id;
-  const book_query = await db.query("SELECT * FROM book WHERE id = $1", [
-    book_id,
+APP.get("/book", async (req, res) => {
+  if (req.isAuthenticated()) user = req.user;
+
+  const BOOK_ID = req.query.book_id;
+  const BOOK_QUERY = await DB.query("SELECT * FROM book WHERE id = $1", [
+    BOOK_ID,
   ]);
-  const book = book_query.rows[0];
-  return res.render("book.ejs", { book: book, user: user });
+  const BOOK = BOOK_QUERY.rows[0];
+
+  return res.render("book.ejs", { book: BOOK, user: user });
 });
 
-app.get("/login", (_req, res) => {
+APP.get("/login", (req, res) => {
+  console.log(req.user);
   res.render("login.ejs");
 });
 
-app.get("/logout", (req, res) => {
+APP.get("/logout", (req, res) => {
   req.logout((err) => {
-    if (err) {
-      console.log(err);
-    } else {
-      user = null;
-      res.redirect("/");
-    }
+    if (err) return next(err);
+    user = null;
+    return res.redirect("/");
   });
 });
 
-app.get("/register", (_req, res) => {
+APP.get("/register", (_req, res) => {
   res.render("register.ejs");
 });
 
-app.get("/logout", (req, res) => {
+APP.get("/logout", (req, res) => {
   req.logout(function (err) {
-    if (err) {
-      return next(err);
-    }
-    res.redirect("/");
+    if (err) return next(err);
+    return res.redirect("/");
   });
 });
 
-app.post(
+APP.post(
   "/login",
   passport.authenticate("local", {
     successRedirect: "/",
@@ -193,89 +187,106 @@ app.post(
   }),
 );
 
-app.post("/register", async (req, res) => {
-  const email = req.body.username;
-  const password = req.body.password;
+APP.post("/register", async (req, res) => {
+  const EMAIL = req.body.username;
+  const PASSWORD = req.body.password;
+
+  const CHECK_RESULT = await DB.query("SELECT * FROM users WHERE email = $1", [
+    EMAIL,
+  ]);
+  if (CHECK_RESULT.rows.length > 0) return req.redirect("/login");
 
   try {
-    const check_result = await db.query(
-      "SELECT * FROM users WHERE email = $1",
-      [email],
+    const HASH = await bcrypt.hash(PASSWORD, SALT_ROUNDS);
+    const NEW_USER_QUERY = await DB.query(
+      "INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *",
+      [EMAIL, HASH],
     );
 
-    if (check_result.rows.length > 0) {
-      req.redirect("/login");
-    } else {
-      bcrypt.hash(password, salt_rounds, async (err, hash) => {
-        if (err) {
-          console.error("Error hashing password:", err);
-        } else {
-          const result = await db.query(
-            "INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *",
-            [email, hash],
-          );
-          const user = result.rows[0];
-          req.login(user, (_err) => {
-            console.log("success");
-            res.redirect("/");
-          });
-        }
-      });
-    }
+    const NEW_USER = NEW_USER_QUERY.rows[0];
+    const USER_ROLE_ID = 2;
+    const USER_ROLE_NAME = "user";
+
+    const USER_QUERY = await DB.query(
+      `INSERT INTO user_roles (user_id, role_id, email, role) 
+       VALUES ($1, $2, $3, $4) 
+       RETURNING *`,
+      [NEW_USER.id, USER_ROLE_ID, EMAIL, USER_ROLE_NAME],
+    );
+
+    const USER = USER_QUERY.rows[0];
+
+    req.login(USER, (_err) => {
+      console.log("success");
+      return res.redirect("/");
+    });
   } catch (err) {
-    console.log(err);
+    console.error("Error hashing password:", err);
   }
 });
 
 passport.use(
   "local",
-  new Strategy(async function verify(username, password, cb) {
+  new Strategy(async function verify(username, password, callback) {
+    const RESULT = await DB.query("SELECT * FROM users WHERE email = $1 ", [
+      username,
+    ]);
+
+    if (RESULT.rows.length === 0) return callback("User not found");
+
+    const USER = RESULT.rows[0];
+    const STORED_HASHED_PASSWORD = USER.password;
+
     try {
-      const result = await db.query("SELECT * FROM users WHERE email = $1 ", [
-        username,
-      ]);
-      if (result.rows.length > 0) {
-        const user = result.rows[0];
-        const storedHashedPassword = user.password;
-        bcrypt.compare(password, storedHashedPassword, (err, valid) => {
-          if (err) {
-            console.error("Error comparing passwords:", err);
-            return cb(err);
-          } else {
-            if (valid) {
-              return cb(null, user);
-            } else {
-              return cb(null, false);
-            }
-          }
-        });
-      } else {
-        return cb("User not found");
-      }
+      const VALID = bcrypt.compare(password, STORED_HASHED_PASSWORD);
+
+      if (!VALID) return callback(null, false);
+
+      const USER_QUERY = await DB.query(
+        `SELECT email, role,
+                CASE
+                    WHEN role = 'admin' THEN 'admin'
+                    WHEN role = 'user' THEN 'user'
+                    ELSE 'other'
+                END AS role
+         FROM user_roles
+         WHERE user_id = $1
+         ORDER BY CASE
+                      WHEN role = 'admin' THEN 1
+                      WHEN role = 'user' THEN 2
+                      ELSE 3
+                  END
+         LIMIT 1;`,
+        [USER.id],
+      );
+
+      return callback(null, USER_QUERY.rows[0]);
     } catch (err) {
-      console.log(err);
+      console.error("Error comparing passwords:", err);
+
+      return callback(err);
     }
   }),
 );
 
-passport.serializeUser((user, cb) => {
-  cb(null, user);
+passport.serializeUser((user, callback) => {
+  callback(null, user);
 });
-passport.deserializeUser((user, cb) => {
-  cb(null, user);
-});
-
-app.get("/api/ai_abstract", async (req, res) => {
-  const author = req.query.author;
-  const title = req.query.title;
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_KEY);
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-  const prompt = `Provide a 20-30 word abstract for the Book ${title} by ${author}`;
-  const result = await model.generateContent(prompt);
-  const text = result.response.candidates[0].content.parts[0].text;
-  return res.send(text);
+passport.deserializeUser((user, callback) => {
+  callback(null, user);
 });
 
-app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
+APP.get("/api/ai_abstract", async (req, res) => {
+  const AUTHOR = req.query.author;
+  const TITLE = req.query.title;
+  const GEN_AI = new GoogleGenerativeAI(process.env.GEMINI_KEY);
+  const MODEL = GEN_AI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const PROMPT = `Provide a 20-30 word abstract for the Book ${TITLE} by ${AUTHOR}`;
+  const RESULT = await MODEL.generateContent(PROMPT);
+  const TEXT = RESULT.response.candidates[0].content.parts[0].text;
+  return res.send(TEXT);
+});
+
+APP.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
 });
