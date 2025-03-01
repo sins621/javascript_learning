@@ -6,7 +6,9 @@
   <body>
     <%- include ('partials/header'); %>
     <%- include ('components/book_card', { book: book }); %>
-    <%- include ('components/reviews', { reviews: reviews }); %>
+    <h3>Reviews</h3>
+    <%- include ('components/review_form', { book:book, user: user }); %>
+    <%- include ('components/reviews', { reviews: reviews, user:user }); %>
     <%- include ('partials/footer'); %>
   </body>
 </html>

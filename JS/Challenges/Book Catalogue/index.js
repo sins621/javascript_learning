@@ -62,11 +62,25 @@ APP.locals.url_for = function (route, params = {}) {
   return QUERY_STRING ? `${route}?${QUERY_STRING}` : route;
 };
 
+function today() {
+  let today = new Date();
+  let dd = today.getDate();
+  let mm = today.getMonth() + 1;
+  let yyyy = today.getFullYear();
+  if (dd < 10) {
+    dd = "0" + dd;
+  }
+  if (mm < 10) {
+    mm = "0" + mm;
+  }
+
+  return yyyy + "-" + mm + "-" + dd;
+}
+
 // Home
 APP.get("/", async (req, res) => {
   if (req.isAuthenticated()) {
     user = req.user;
-    console.log(user);
   }
 
   const BOOK_QUERY = await DB.query("SELECT * FROM book");
@@ -155,20 +169,19 @@ APP.post("/submit", async (req, res) => {
 
 APP.get("/book_focus", async (req, res) => {
   if (req.isAuthenticated()) user = req.user;
+  console.log(user);
 
   const BOOK_ID = req.query.book_id;
   const BOOK_QUERY = await DB.query("SELECT * FROM book WHERE id = $1", [
     BOOK_ID,
   ]);
   const BOOK = BOOK_QUERY.rows[0];
-  console.log(BOOK_ID);
   const REVIEW_QUERY = await DB.query(
     `SELECT * FROM book_review
      WHERE book_id = $1`,
     [BOOK_ID],
   );
   const REVIEWS = REVIEW_QUERY.rows;
-  console.log(REVIEWS);
   return res.render("book_focus.ejs", {
     book: BOOK,
     user: user,
@@ -176,8 +189,55 @@ APP.get("/book_focus", async (req, res) => {
   });
 });
 
+// FIX: Redirect doesn't work, probably because of missing data.
+
+APP.post("/add_review", async (req, res) => {
+  const TITLE = req.body.title;
+  try {
+    var USER_QUERY = await DB.query(
+      `SELECT * FROM users
+     WHERE email = $1`,
+      [req.user.email],
+    );
+  } catch (err) {
+    console.log(err);
+  }
+  const TODAY = today();
+  const REVIEW = req.body.review;
+  const USER_ID = USER_QUERY.rows[0].id;
+  const RATING = req.body.rating;
+  const BOOK_ID = req.body.book_id;
+  console.log({
+    title: TITLE,
+    user_name: USER_NAME,
+    today: TODAY,
+    review: REVIEW,
+    user_id: USER_ID,
+    rating: RATING,
+    book_id: BOOK_ID,
+  });
+  try {
+    await DB.query(
+      `INSERT INTO book_review (
+       review_title,
+       reviewer_name,
+       review_date,
+       review_text,
+       user_id,
+       review_rating,
+       book_id
+     )
+     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [TITLE, USER_NAME, today(), REVIEW, USER_ID, RATING, BOOK_ID],
+    );
+  } catch (err) {
+    console.log(`DB Error ${err}`);
+  }
+
+  res.redirect("/book_focus");
+});
+
 APP.get("/login", (req, res) => {
-  console.log(req.user);
   res.render("login.ejs");
 });
 
