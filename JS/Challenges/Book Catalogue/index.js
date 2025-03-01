@@ -25,7 +25,7 @@ APP.use(express.static("public"));
 APP.use(passport.initialize());
 APP.use(passport.session());
 
-const PORT = 3000;
+const PORT = 6199;
 
 const DB = new pg.Client({
   user: "postgres",
@@ -136,7 +136,8 @@ APP.post("/submit", async (req, res) => {
   ];
 
   DB.query(
-    "INSERT INTO book (title, author, category, publish_year, abstract, cover_id, quantity, price) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+    `INSERT INTO book (title, author, category, publish_year, abstract, cover_id, quantity, price) 
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
     VALUES_TO_ADD,
   );
 
@@ -191,15 +192,18 @@ APP.post("/register", async (req, res) => {
   const EMAIL = req.body.username;
   const PASSWORD = req.body.password;
 
-  const CHECK_RESULT = await DB.query("SELECT * FROM users WHERE email = $1", [
-    EMAIL,
-  ]);
+  const CHECK_RESULT = await DB.query(
+    `SELECT * FROM users
+     WHERE email = $1`,
+    [EMAIL],
+  );
   if (CHECK_RESULT.rows.length > 0) return req.redirect("/login");
 
   try {
     const HASH = await bcrypt.hash(PASSWORD, SALT_ROUNDS);
     const NEW_USER_QUERY = await DB.query(
-      "INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *",
+      `INSERT INTO users (email, password)
+       VALUES ($1, $2) RETURNING *`,
       [EMAIL, HASH],
     );
 
@@ -208,8 +212,8 @@ APP.post("/register", async (req, res) => {
     const USER_ROLE_NAME = "user";
 
     const USER_QUERY = await DB.query(
-      `INSERT INTO user_roles (user_id, role_id, email, role) 
-       VALUES ($1, $2, $3, $4) 
+      `INSERT INTO user_roles (user_id, role_id, email, role)
+       VALUES ($1, $2, $3, $4)
        RETURNING *`,
       [NEW_USER.id, USER_ROLE_ID, EMAIL, USER_ROLE_NAME],
     );
@@ -244,18 +248,18 @@ passport.use(
 
       const USER_QUERY = await DB.query(
         `SELECT email, role,
-                CASE
-                    WHEN role = 'admin' THEN 'admin'
-                    WHEN role = 'user' THEN 'user'
-                    ELSE 'other'
-                END AS role
+           CASE
+             WHEN role = 'admin' THEN 'admin'
+             WHEN role = 'user' THEN 'user'
+             ELSE 'other'
+           END AS role
          FROM user_roles
          WHERE user_id = $1
          ORDER BY CASE
-                      WHEN role = 'admin' THEN 1
-                      WHEN role = 'user' THEN 2
-                      ELSE 3
-                  END
+             WHEN role = 'admin' THEN 1
+             WHEN role = 'user' THEN 2
+             ELSE 3
+           END
          LIMIT 1;`,
         [USER.id],
       );
