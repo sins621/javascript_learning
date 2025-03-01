@@ -1,21 +1,33 @@
 <hr />
+<style>
+#footer-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+#footer-container > div {
+  width: 30%;
+}
+
+</style>
 <footer>
-  <div class="footer-container">
-    <div class="services">
+  <div id="footer-container">
+    <div id="services">
       <h3>Services</h3>
       <p>Get a Quote</p>
       <p>Careers</p>
       <p>Wishlists</p>
       <p>Gift Vouchers</p>
     </div>
-    <div class="contact">
+    <div id="contact">
       <h3>Contact</h3>
       <p>Tel: 012 213 4134</p>
       <p>Locations</p>
       <p>Contact Details</p>
       <p>Returns & Completions</p>
     </div>
-    <div class="newsletter">
+    <div id="newsletter">
       <h3>Newsletter</h3>
       <form action="/subscribe" method="post">
         <input type="email" name="mail" placeholder="email" /><br />

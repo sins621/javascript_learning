@@ -136,7 +136,16 @@ APP.post("/submit", async (req, res) => {
   ];
 
   DB.query(
-    `INSERT INTO book (title, author, category, publish_year, abstract, cover_id, quantity, price) 
+    `INSERT INTO book (
+       title,
+       author,
+       category,
+       publish_year,
+       abstract,
+       cover_id,
+       quantity,
+       price
+       )
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
     VALUES_TO_ADD,
   );
@@ -144,7 +153,7 @@ APP.post("/submit", async (req, res) => {
   return res.redirect("/");
 });
 
-APP.get("/book", async (req, res) => {
+APP.get("/book_focus", async (req, res) => {
   if (req.isAuthenticated()) user = req.user;
 
   const BOOK_ID = req.query.book_id;
@@ -152,8 +161,19 @@ APP.get("/book", async (req, res) => {
     BOOK_ID,
   ]);
   const BOOK = BOOK_QUERY.rows[0];
-
-  return res.render("book.ejs", { book: BOOK, user: user });
+  console.log(BOOK_ID);
+  const REVIEW_QUERY = await DB.query(
+    `SELECT * FROM book_review
+     WHERE book_id = $1`,
+    [BOOK_ID],
+  );
+  const REVIEWS = REVIEW_QUERY.rows;
+  console.log(REVIEWS);
+  return res.render("book_focus.ejs", {
+    book: BOOK,
+    user: user,
+    reviews: REVIEWS,
+  });
 });
 
 APP.get("/login", (req, res) => {

@@ -1,47 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <%- include ('partials/head') %>
+    <%- include ('partials/head'); %>
   </head>
   <body>
-    <%- include ('partials/header') %>
-    <div class="categories">
-      <% if (locals.categories) { %> <% categories.forEach((category)=> { %> <%
-      if (books.some(book=> book.category === category)) { %>
-      <a href="<%= url_for('filter', {category : category}) %>" class="category"><%= category %></a>
-      <% } %> <% }); %> <% } %>
-    </div>
+    <%- include ('partials/header'); %>
     <hr />
+    <%- include ('components/categories', {categories: categories}); %>
+    <hr/>
     <div>
       <main>
-        <% if (locals.books && locals.categories) { %> <%
-        categories.forEach((category)=> { %> <% if (books.some(book=>
-        book.category === category)) { %>
-        <h2 class="section-heading">
-          <a id="<%=category%>"><%= category %></a>
-        </h2>
-        <div class="books">
-          <% books.forEach((book)=> { %> <% if (book.category==category) { %>
-          <div>
-            <div>
-              <a href="<%= url_for('book', {book_id : book.id}) %>">
-                <img
-                  class="cover-photo"
-                  src="https://covers.openlibrary.org/b/id/<%= book.cover_id %>-M.jpg"
-                />
-              </a>
-              <div class="book-content">
-                <h3><%= book.title %></h3>
-                <h4><%= book.author %> <%= book.publish_year %></h4>
-                <p><strong>R<%= book.price %></strong><br /></p>
-              </div>
-            </div>
-          </div>
-          <% } %> <% }); %>
-        </div>
-        <%} %> <% }); %> <% } %>
+        <%- include (
+          'components/books_grid',
+          {books: books, categories: categories}
+          ); %>
       </main>
     </div>
-    <%- include ('partials/footer') %>
+    <%- include ('partials/footer'); %>
   </body>
 </html>

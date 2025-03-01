@@ -1,0 +1,23 @@
+<style>
+  #categories {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  #categories a {
+    margin: 0px 5px;
+  }
+
+</style>
+<div id="categories">
+  <% if (locals.categories) { %>
+    <% categories.forEach((category)=> { %>
+      <% if (books.some(book=> book.category === category)) { %>
+        <a href="<%= url_for('filter', {category : category}) %>" class="">
+          <%= category %>
+        </a>
+      <% } %>
+    <% }); %>
+  <% } %>
+</div>

@@ -1,0 +1,18 @@
+<div class="book-focus">
+  <div class="cover-focus">
+    <img id = "cover" 
+      src="https://covers.openlibrary.org/b/id/<%= book.cover_id %>-L.jpg"
+    />
+  </div>
+  <div class="book-info-focus">
+    <h3><%= book.title %></h3>
+    <h4><%= book.author %> <%= book.publish_year %></h4>
+  </div>
+  <div class="abstract-focus">
+    <p><%= book.abstract %></p>
+  </div>
+  <div class="price-focus">
+    <p><strong>R<%= book.price %></strong></p>
+    <button id="purchase-button">Add to Cart</button>
+  </div>
+</div>

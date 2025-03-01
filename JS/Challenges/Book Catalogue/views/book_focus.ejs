@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <%- include ('partials/head'); %>
+  </head>
+  <body>
+    <%- include ('partials/header'); %>
+    <%- include ('components/book_card', {book: book}); %>
+    <%- include ('components/reviews', {reviews: reviews}); %>
+    <%- include ('partials/footer'); %>
+  </body>
+</html>
