@@ -138,19 +138,9 @@ APP.get("/add", async (req, res) => {
 
 APP.post("/submit", async (req, res) => {
   const BOOK = JSON.parse(req.body.book);
-  const VALUES_TO_ADD = [
-    BOOK.title,
-    BOOK.author_name[0],
-    req.body.category,
-    BOOK.publish_year[0],
-    req.body.abstract,
-    BOOK.cover_i,
-    req.body.quantity,
-    req.body.price,
-  ];
-
-  DB.query(
-    `INSERT INTO book (
+  try {
+    await DB.query(
+      `INSERT INTO book (
        title,
        author,
        category,
@@ -161,8 +151,20 @@ APP.post("/submit", async (req, res) => {
        price
        )
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-    VALUES_TO_ADD,
-  );
+      [
+        BOOK.title,
+        BOOK.author_name[0],
+        req.body.category,
+        BOOK.publish_year[0],
+        req.body.abstract,
+        BOOK.cover_i,
+        req.body.quantity,
+        req.body.price,
+      ],
+    );
+  } catch (err) {
+    console.log(`Server Error: ${err}`);
+  }
 
   return res.redirect("/");
 });
