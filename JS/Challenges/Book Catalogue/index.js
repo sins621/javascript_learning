@@ -230,9 +230,7 @@ APP.post("/add_review", async (req, res) => {
   res.redirect(`/book_focus?book_id=${req.body.book_id}`);
 });
 
-APP.get("/login", (_req, res) => {
-  res.render("login.ejs");
-});
+
 
 APP.get("/logout", (req, res) => {
   req.logout((err) => {
@@ -242,15 +240,8 @@ APP.get("/logout", (req, res) => {
   });
 });
 
-APP.get("/register", (_req, res) => {
-  res.render("register.ejs");
-});
-
-APP.get("/logout", (req, res) => {
-  req.logout(function (err) {
-    if (err) return next(err);
-    return res.redirect("/");
-  });
+APP.get("/login", (_req, res) => {
+  res.render("login.ejs");
 });
 
 APP.post(
@@ -260,6 +251,10 @@ APP.post(
     failureRedirect: "/login",
   }),
 );
+
+APP.get("/register", (_req, res) => {
+  res.render("register.ejs");
+});
 
 APP.post("/register", async (req, res) => {
   const EMAIL = req.body.username;
