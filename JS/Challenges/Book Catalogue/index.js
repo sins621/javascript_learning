@@ -10,6 +10,9 @@ import passport from "passport";
 import { Strategy } from "passport-local";
 import session from "express-session";
 
+// TODO: Improve DB Query Error Logging Messages
+// TODO: Modify Login Route to Include Name
+
 const APP = express();
 APP.use(
   session({
@@ -83,8 +86,13 @@ APP.get("/", async (req, res) => {
     user = req.user;
   }
 
-  const BOOK_QUERY = await DB.query("SELECT * FROM book");
-  const BOOKS = BOOK_QUERY.rows;
+  try {
+    var book_query = await DB.query("SELECT * FROM book");
+  } catch (err) {
+    console.log(`DB Error: ${err}`);
+  }
+
+  const BOOKS = book_query.rows;
   return res.render("index.ejs", {
     categories: CATEGORIES,
     books: BOOKS,
@@ -96,10 +104,18 @@ APP.get("/filter", async (req, res) => {
   if (req.isAuthenticated()) {
     user = req.user;
   }
-  const BOOK_QUERY = await DB.query("SELECT * FROM book where category=$1", [
-    req.query.category,
-  ]);
-  const BOOKS = BOOK_QUERY.rows;
+
+  try {
+    var book_query = await DB.query(
+      `SELECT * FROM book
+       WHERE category=$1`,
+      [req.query.category],
+    );
+  } catch (err) {
+    console.log(`DB Error: ${err}`);
+  }
+
+  const BOOKS = book_query.rows;
   return res.render("index.ejs", {
     categories: CATEGORIES,
     books: BOOKS,
@@ -108,6 +124,8 @@ APP.get("/filter", async (req, res) => {
 });
 
 APP.post("/add", async (req, res) => {
+  if (!req.body) return res.send("Server Error").status(503);
+
   const URL = "https://openlibrary.org/search.json";
   const PARAMS = {
     author: req.body.author,
@@ -137,6 +155,8 @@ APP.get("/add", async (req, res) => {
 });
 
 APP.post("/submit", async (req, res) => {
+  if (!req.body) return res.send("Server Error").status(503);
+
   const BOOK = JSON.parse(req.body.book);
   try {
     await DB.query(
@@ -170,19 +190,30 @@ APP.post("/submit", async (req, res) => {
 });
 
 APP.get("/book_focus", async (req, res) => {
+  if (!req.query) return res.send("Server Error").status(503);
+
   if (req.isAuthenticated()) user = req.user;
 
   const BOOK_ID = req.query.book_id;
-  const BOOK_QUERY = await DB.query("SELECT * FROM book WHERE id = $1", [
-    BOOK_ID,
-  ]);
-  const BOOK = BOOK_QUERY.rows[0];
-  const REVIEW_QUERY = await DB.query(
-    `SELECT * FROM book_review
+  try {
+    var book_query = await DB.query("SELECT * FROM book WHERE id = $1", [
+      BOOK_ID,
+    ]);
+  } catch (err) {
+    console.log(`DB Error ${err}`);
+  }
+  const BOOK = book_query.rows[0];
+  try {
+    var review_query = await DB.query(
+      `SELECT * FROM book_review
      WHERE book_id = $1`,
-    [BOOK_ID],
-  );
-  const REVIEWS = REVIEW_QUERY.rows;
+      [BOOK_ID],
+    );
+  } catch (err) {
+    console.log(`DB Error ${err}`);
+  }
+  const REVIEWS = review_query.rows;
+
   return res.render("book_focus.ejs", {
     book: BOOK,
     user: user,
@@ -191,8 +222,10 @@ APP.get("/book_focus", async (req, res) => {
 });
 
 APP.post("/add_review", async (req, res) => {
+  if (!req.user || !req.body) return res.send("Server Error").status(503);
+
   try {
-    var USER_QUERY = await DB.query(
+    var user_query = await DB.query(
       `SELECT * FROM users
      WHERE email = $1`,
       [req.user.email],
@@ -215,10 +248,10 @@ APP.post("/add_review", async (req, res) => {
      VALUES ($1, $2, $3, $4, $5, $6, $7)`,
       [
         req.body.title,
-        USER_QUERY.rows[0].name,
+        user_query.rows[0].name,
         today(),
         req.body.review,
-        USER_QUERY.rows[0].id,
+        user_query.rows[0].id,
         req.body.rating,
         req.body.book_id,
       ],
@@ -229,8 +262,6 @@ APP.post("/add_review", async (req, res) => {
 
   res.redirect(`/book_focus?book_id=${req.body.book_id}`);
 });
-
-
 
 APP.get("/logout", (req, res) => {
   req.logout((err) => {
@@ -257,15 +288,21 @@ APP.get("/register", (_req, res) => {
 });
 
 APP.post("/register", async (req, res) => {
+  if (!req.body) return res.send("Server Error").status(503);
+
   const EMAIL = req.body.username;
   const PASSWORD = req.body.password;
 
-  const CHECK_RESULT = await DB.query(
-    `SELECT * FROM users
+  try {
+    var check_result = await DB.query(
+      `SELECT * FROM users
      WHERE email = $1`,
-    [EMAIL],
-  );
-  if (CHECK_RESULT.rows.length > 0) return req.redirect("/login");
+      [EMAIL],
+    );
+  } catch (err) {
+    console.log(`DB Error ${err}`);
+  }
+  if (check_result.rows.length > 0) return req.redirect("/login");
 
   try {
     const HASH = await bcrypt.hash(PASSWORD, SALT_ROUNDS);
@@ -279,14 +316,18 @@ APP.post("/register", async (req, res) => {
     const USER_ROLE_ID = 2;
     const USER_ROLE_NAME = "user";
 
-    const USER_QUERY = await DB.query(
-      `INSERT INTO user_roles (user_id, role_id, email, role)
+    try {
+      var user_query = await DB.query(
+        `INSERT INTO user_roles (user_id, role_id, email, role)
        VALUES ($1, $2, $3, $4)
        RETURNING *`,
-      [NEW_USER.id, USER_ROLE_ID, EMAIL, USER_ROLE_NAME],
-    );
+        [NEW_USER.id, USER_ROLE_ID, EMAIL, USER_ROLE_NAME],
+      );
+    } catch (err) {
+      console.log(`DB Error: ${err}`);
+    }
 
-    const USER = USER_QUERY.rows[0];
+    const USER = user_query.rows[0];
 
     req.login(USER, (_err) => {
       console.log("success");
@@ -300,13 +341,17 @@ APP.post("/register", async (req, res) => {
 passport.use(
   "local",
   new Strategy(async function verify(username, password, callback) {
-    const RESULT = await DB.query("SELECT * FROM users WHERE email = $1 ", [
-      username,
-    ]);
+    try {
+      var result = await DB.query("SELECT * FROM users WHERE email = $1 ", [
+        username,
+      ]);
+    } catch (err) {
+      console.log(`DB Error ${err}`);
+    }
 
-    if (RESULT.rows.length === 0) return callback("User not found");
+    if (result.rows.length === 0) return callback("User not found");
 
-    const USER = RESULT.rows[0];
+    const USER = result.rows[0];
     const STORED_HASHED_PASSWORD = USER.password;
 
     try {
@@ -314,25 +359,29 @@ passport.use(
 
       if (!VALID) return callback(null, false);
 
-      const USER_QUERY = await DB.query(
-        `SELECT email, role,
-           CASE
-             WHEN role = 'admin' THEN 'admin'
-             WHEN role = 'user' THEN 'user'
-             ELSE 'other'
-           END AS role
-         FROM user_roles
-         WHERE user_id = $1
-         ORDER BY CASE
-             WHEN role = 'admin' THEN 1
-             WHEN role = 'user' THEN 2
-             ELSE 3
-           END
-         LIMIT 1;`,
-        [USER.id],
-      );
+      try {
+        var user_query = await DB.query(
+          `SELECT email, role,
+             CASE
+               WHEN role = 'admin' THEN 'admin'
+               WHEN role = 'user' THEN 'user'
+               ELSE 'other'
+             END AS role
+           FROM user_roles
+           WHERE user_id = $1
+             ORDER BY CASE
+               WHEN role = 'admin' THEN 1
+               WHEN role = 'user' THEN 2
+               ELSE 3
+             END
+           LIMIT 1;`,
+          [USER.id],
+        );
+      } catch (err) {
+        console.log(`DB Error ${err}`);
+      }
 
-      return callback(null, USER_QUERY.rows[0]);
+      return callback(null, user_query.rows[0]);
     } catch (err) {
       console.error("Error comparing passwords:", err);
 
