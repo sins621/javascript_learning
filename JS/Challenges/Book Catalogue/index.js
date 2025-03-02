@@ -24,7 +24,6 @@ APP.use(
 APP.use(bodyParser.urlencoded({ extended: true }));
 APP.use(express.static("public"));
 APP.use(morgan("tiny"));
-APP.use(express.static("public"));
 APP.use(passport.initialize());
 APP.use(passport.session());
 
@@ -58,7 +57,6 @@ const CATEGORIES = [
 ];
 
 const SALT_ROUNDS = 10;
-let user = null;
 
 APP.locals.url_for = function (route, params = {}) {
   const QUERY_STRING = new URLSearchParams(params).toString();
@@ -83,7 +81,9 @@ function today() {
 // Home
 APP.get("/", async (req, res) => {
   if (req.isAuthenticated()) {
-    user = req.user;
+    var user = req.user;
+  } else {
+    var user = null;
   }
 
   try {
@@ -92,7 +92,11 @@ APP.get("/", async (req, res) => {
     console.log(`DB Error: ${err}`);
   }
 
+  if (book_query.rows.length === 0)
+    return res.send("Error Retrieving Books").status(500);
+
   const BOOKS = book_query.rows;
+
   return res.render("index.ejs", {
     categories: CATEGORIES,
     books: BOOKS,
@@ -102,7 +106,9 @@ APP.get("/", async (req, res) => {
 
 APP.get("/filter", async (req, res) => {
   if (req.isAuthenticated()) {
-    user = req.user;
+    var user = req.user;
+  } else {
+    var user = null;
   }
 
   try {
@@ -115,7 +121,11 @@ APP.get("/filter", async (req, res) => {
     console.log(`DB Error: ${err}`);
   }
 
+  if (book_query.rows.length === 0)
+    return res.send("Error Retrieving Books").status(500);
+
   const BOOKS = book_query.rows;
+
   return res.render("index.ejs", {
     categories: CATEGORIES,
     books: BOOKS,
@@ -124,7 +134,7 @@ APP.get("/filter", async (req, res) => {
 });
 
 APP.post("/add", async (req, res) => {
-  if (!req.body) return res.send("Server Error").status(503);
+  if (!req.body) return res.send("Server Error").status(500);
 
   const URL = "https://openlibrary.org/search.json";
   const PARAMS = {
@@ -155,7 +165,7 @@ APP.get("/add", async (req, res) => {
 });
 
 APP.post("/submit", async (req, res) => {
-  if (!req.body) return res.send("Server Error").status(503);
+  if (!req.body) return res.send("Server Error").status(500);
 
   const BOOK = JSON.parse(req.body.book);
   try {
@@ -190,9 +200,13 @@ APP.post("/submit", async (req, res) => {
 });
 
 APP.get("/book_focus", async (req, res) => {
-  if (!req.query) return res.send("Server Error").status(503);
+  if (!req.query) return res.send("Server Error").status(500);
 
-  if (req.isAuthenticated()) user = req.user;
+  if (req.isAuthenticated()) {
+    var user = req.user;
+  } else {
+    var user = null;
+  }
 
   const BOOK_ID = req.query.book_id;
   try {
@@ -202,6 +216,10 @@ APP.get("/book_focus", async (req, res) => {
   } catch (err) {
     console.log(`DB Error ${err}`);
   }
+
+  if (book_query.rows.length === 0)
+    return res.send("Error Retrieving Book").status(500);
+
   const BOOK = book_query.rows[0];
   try {
     var review_query = await DB.query(
@@ -212,6 +230,8 @@ APP.get("/book_focus", async (req, res) => {
   } catch (err) {
     console.log(`DB Error ${err}`);
   }
+
+  // Finding no reviews won't result in an error, none will be displayed.
   const REVIEWS = review_query.rows;
 
   return res.render("book_focus.ejs", {
@@ -222,7 +242,7 @@ APP.get("/book_focus", async (req, res) => {
 });
 
 APP.post("/add_review", async (req, res) => {
-  if (!req.user || !req.body) return res.send("Server Error").status(503);
+  if (!req.user || !req.body) return res.send("Server Error").status(500);
 
   try {
     var user_query = await DB.query(
@@ -233,6 +253,9 @@ APP.post("/add_review", async (req, res) => {
   } catch (err) {
     console.log(err);
   }
+
+  if (user_query.rows.length === 0)
+    return res.send("Error retrieving Profile").status(500);
 
   try {
     await DB.query(
@@ -266,7 +289,6 @@ APP.post("/add_review", async (req, res) => {
 APP.get("/logout", (req, res) => {
   req.logout((err) => {
     if (err) return next(err);
-    user = null;
     return res.redirect("/");
   });
 });
@@ -288,7 +310,7 @@ APP.get("/register", (_req, res) => {
 });
 
 APP.post("/register", async (req, res) => {
-  if (!req.body) return res.send("Server Error").status(503);
+  if (!req.body) return res.send("Server Error").status(500);
 
   const EMAIL = req.body.username;
   const PASSWORD = req.body.password;
@@ -302,17 +324,25 @@ APP.post("/register", async (req, res) => {
   } catch (err) {
     console.log(`DB Error ${err}`);
   }
+
   if (check_result.rows.length > 0) return req.redirect("/login");
 
   try {
     const HASH = await bcrypt.hash(PASSWORD, SALT_ROUNDS);
-    const NEW_USER_QUERY = await DB.query(
-      `INSERT INTO users (email, password)
+    try {
+      var new_user_query = await DB.query(
+        `INSERT INTO users (email, password)
        VALUES ($1, $2) RETURNING *`,
-      [EMAIL, HASH],
-    );
+        [EMAIL, HASH],
+      );
+    } catch (err) {
+      console.log(`Error Adding New User to the DB: ${err}`);
+    }
 
-    const NEW_USER = NEW_USER_QUERY.rows[0];
+    if (new_user_query.rows.lengh === 0)
+      res.send("Catastrophic Server Failure").status(500);
+
+    const NEW_USER = new_user_query.rows[0];
     const USER_ROLE_ID = 2;
     const USER_ROLE_NAME = "user";
 
@@ -326,6 +356,9 @@ APP.post("/register", async (req, res) => {
     } catch (err) {
       console.log(`DB Error: ${err}`);
     }
+
+    if (user_query.rows.length === 0)
+      res.send("Unexpected Failure").status(500);
 
     const USER = user_query.rows[0];
 
@@ -355,7 +388,7 @@ passport.use(
     const STORED_HASHED_PASSWORD = USER.password;
 
     try {
-      const VALID = bcrypt.compare(password, STORED_HASHED_PASSWORD);
+      const VALID = await bcrypt.compare(password, STORED_HASHED_PASSWORD);
 
       if (!VALID) return callback(null, false);
 
