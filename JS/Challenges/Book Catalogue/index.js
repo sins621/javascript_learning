@@ -169,7 +169,6 @@ APP.post("/submit", async (req, res) => {
 
 APP.get("/book_focus", async (req, res) => {
   if (req.isAuthenticated()) user = req.user;
-  console.log(user);
 
   const BOOK_ID = req.query.book_id;
   const BOOK_QUERY = await DB.query("SELECT * FROM book WHERE id = $1", [
@@ -189,10 +188,7 @@ APP.get("/book_focus", async (req, res) => {
   });
 });
 
-// FIX: Redirect doesn't work, probably because of missing data.
-
 APP.post("/add_review", async (req, res) => {
-  const TITLE = req.body.title;
   try {
     var USER_QUERY = await DB.query(
       `SELECT * FROM users
@@ -202,20 +198,7 @@ APP.post("/add_review", async (req, res) => {
   } catch (err) {
     console.log(err);
   }
-  const TODAY = today();
-  const REVIEW = req.body.review;
-  const USER_ID = USER_QUERY.rows[0].id;
-  const RATING = req.body.rating;
-  const BOOK_ID = req.body.book_id;
-  console.log({
-    title: TITLE,
-    user_name: USER_NAME,
-    today: TODAY,
-    review: REVIEW,
-    user_id: USER_ID,
-    rating: RATING,
-    book_id: BOOK_ID,
-  });
+
   try {
     await DB.query(
       `INSERT INTO book_review (
@@ -228,16 +211,24 @@ APP.post("/add_review", async (req, res) => {
        book_id
      )
      VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [TITLE, USER_NAME, today(), REVIEW, USER_ID, RATING, BOOK_ID],
+      [
+        req.body.title,
+        USER_QUERY.rows[0].name,
+        today(),
+        req.body.review,
+        USER_QUERY.rows[0].id,
+        req.body.rating,
+        req.body.book_id,
+      ],
     );
   } catch (err) {
     console.log(`DB Error ${err}`);
   }
 
-  res.redirect("/book_focus");
+  res.redirect(`/book_focus?book_id=${req.body.book_id}`);
 });
 
-APP.get("/login", (req, res) => {
+APP.get("/login", (_req, res) => {
   res.render("login.ejs");
 });
 
