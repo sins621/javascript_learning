@@ -87,7 +87,7 @@ APP.get("/", async (req, res) => {
   }
 
   try {
-    var book_query = await DB.query("SELECT * FROM book");
+    var book_query = await DB.query("SELECT * FROM books");
   } catch (err) {
     console.log(`DB Error: ${err}`);
   }
@@ -113,7 +113,7 @@ APP.get("/filter", async (req, res) => {
 
   try {
     var book_query = await DB.query(
-      `SELECT * FROM book
+      `SELECT * FROM books
        WHERE category=$1`,
       [req.query.category],
     );
@@ -170,7 +170,7 @@ APP.post("/submit", async (req, res) => {
   const BOOK = JSON.parse(req.body.book);
   try {
     await DB.query(
-      `INSERT INTO book (
+      `INSERT INTO books (
        title,
        author,
        category,
@@ -210,7 +210,7 @@ APP.get("/book_focus", async (req, res) => {
 
   const BOOK_ID = req.query.book_id;
   try {
-    var book_query = await DB.query("SELECT * FROM book WHERE id = $1", [
+    var book_query = await DB.query("SELECT * FROM books WHERE id = $1", [
       BOOK_ID,
     ]);
   } catch (err) {
@@ -223,7 +223,7 @@ APP.get("/book_focus", async (req, res) => {
   const BOOK = book_query.rows[0];
   try {
     var review_query = await DB.query(
-      `SELECT * FROM book_review
+      `SELECT * FROM book_reviews
      WHERE book_id = $1`,
       [BOOK_ID],
     );
@@ -259,7 +259,7 @@ APP.post("/add_review", async (req, res) => {
 
   try {
     await DB.query(
-      `INSERT INTO book_review (
+      `INSERT INTO book_reviews (
        review_title,
        reviewer_name,
        review_date,
