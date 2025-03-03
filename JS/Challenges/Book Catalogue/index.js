@@ -11,7 +11,6 @@ import { Strategy } from "passport-local";
 import session from "express-session";
 
 // TODO: Improve DB Query Error Logging Messages
-// TODO: Modify Login Route to Include Name
 
 const APP = express();
 APP.use(
@@ -286,6 +285,9 @@ APP.post("/add_review", async (req, res) => {
   res.redirect(`/book_focus?book_id=${req.body.book_id}`);
 });
 
+APP.post("/add_cart", async (req, res) => {
+});
+
 APP.get("/logout", (req, res) => {
   req.logout((err) => {
     if (err) return next(err);
@@ -314,6 +316,7 @@ APP.post("/register", async (req, res) => {
 
   const EMAIL = req.body.username;
   const PASSWORD = req.body.password;
+  const NAME = req.body.name;
 
   try {
     var check_result = await DB.query(
@@ -331,9 +334,9 @@ APP.post("/register", async (req, res) => {
     const HASH = await bcrypt.hash(PASSWORD, SALT_ROUNDS);
     try {
       var new_user_query = await DB.query(
-        `INSERT INTO users (email, password)
-       VALUES ($1, $2) RETURNING *`,
-        [EMAIL, HASH],
+        `INSERT INTO users (email, password, name)
+       VALUES ($1, $2, $3) RETURNING *`,
+        [EMAIL, HASH, NAME],
       );
     } catch (err) {
       console.log(`Error Adding New User to the DB: ${err}`);

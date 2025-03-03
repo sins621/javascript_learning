@@ -6,14 +6,11 @@
   <body>
     <%- include ('partials/header'); %>
     <hr />
-    <%- include ('components/categories', {categories: categories}); %>
+    <%- include ('components/categories'); %>
     <hr/>
     <div>
       <main>
-        <%- include (
-          'components/books_grid',
-          {books: books, categories: categories}
-          ); %>
+        <%- include ('components/books_grid'); %>
       </main>
     </div>
     <%- include ('partials/footer'); %>
