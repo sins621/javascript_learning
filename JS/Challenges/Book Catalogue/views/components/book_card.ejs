@@ -13,6 +13,39 @@
   </div>
   <div class="price-focus">
     <p><strong>R<%= book.price %></strong></p>
-    <button id="purchase-button">Add to Cart</button>
+    <% if (locals.user) { %>
+      <button id="purchase-button" onclick="add_to_cart()">Add to Cart</button>
+    <% } else { %>
+      <button id="purchase-button" onclick="location.href='/login'" type="button">
+        Add to Cart
+      </button>
+    <% } %>
   </div>
 </div>
+<% if (locals.user) { %>
+  <script>
+      const CART_DATA = {
+        book_id : <%= book.id %>,
+        book_title : "<%= book.title %>",
+        user_email : "<%= locals.user.email %>",
+        book_title : "<%= book.title %>",
+        book_price : <%= book.price %>,
+        book_remaining : <%= book.quantity %>
+      }
+
+      async function add_to_cart() {
+        const RESPONSE = await fetch(
+          '/add_cart', {
+            method:"POST",
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(CART_DATA)
+            });
+
+        const DATA = await RESPONSE.json()
+        location.href = DATA.redirect_url;
+      }
+  </script>
+<% } %>

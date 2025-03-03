@@ -21,6 +21,7 @@ APP.use(
   }),
 );
 APP.use(bodyParser.urlencoded({ extended: true }));
+APP.use(bodyParser.json());
 APP.use(express.static("public"));
 APP.use(morgan("tiny"));
 APP.use(passport.initialize());
@@ -132,7 +133,15 @@ APP.get("/filter", async (req, res) => {
   });
 });
 
-APP.post("/add", async (req, res) => {
+APP.get("/add_book", async (req, res) => {
+  if (req.isAuthenticated() === false) return res.render("login.ejs");
+
+  if (req.user.role != "admin") return res.redirect("/");
+
+  return res.render("add_book.ejs");
+});
+
+APP.post("/add_book", async (req, res) => {
   if (!req.body) return res.send("Server Error").status(500);
 
   const URL = "https://openlibrary.org/search.json";
@@ -153,14 +162,6 @@ APP.post("/add", async (req, res) => {
 
     return res.status(500);
   }
-});
-
-APP.get("/add", async (req, res) => {
-  if (req.isAuthenticated() === false) return res.render("login.ejs");
-
-  if (req.user.role != "admin") return res.redirect("/");
-
-  return res.render("add_book.ejs");
 });
 
 APP.post("/submit", async (req, res) => {
@@ -285,7 +286,113 @@ APP.post("/add_review", async (req, res) => {
   res.redirect(`/book_focus?book_id=${req.body.book_id}`);
 });
 
+APP.get("/cart", async (req, res) => {
+  if (req.isAuthenticated() === false) return res.render("login.ejs");
+
+  try {
+    var result = await DB.query(
+      `SELECT * FROM users
+       WHERE
+         email = $1`,
+      [req.user.email],
+    );
+  } catch (err) {
+    return res.send(`Error Retrieving User ${err}`).status(500);
+  }
+  const USER_ID = result.rows[0].id;
+
+  try {
+    const CART_QUERY = await DB.query(
+      `SELECT * FROM carts
+       WHERE user_id = $1`,
+      [USER_ID],
+    );
+
+    var cart_items = CART_QUERY.rows;
+    console.log(cart_items);
+  } catch (err) {
+    return res.send(`Error Retrieving Cart ${err}`).status(500);
+  }
+
+  return res.render("cart.ejs", { user: req.user, cart: cart_items });
+});
+
 APP.post("/add_cart", async (req, res) => {
+  try {
+    const USER_QUERY = await DB.query(
+      `SELECT * FROM users
+     WHERE email = $1`,
+      [req.body.user_email],
+    );
+    var user_id = USER_QUERY.rows[0].id;
+  } catch (err) {
+    return res.send(`User Query Error: ${err}`).status(500);
+  }
+
+  /* NOTE: This creates a dependancy on the books table. When the price and amount
+           of books remaining in the books table is updated, so will this table
+           need to be updated. */
+  try {
+    var book_query = await DB.query(
+      `SELECT * FROM public.carts
+       WHERE
+         book_id = $1
+       AND
+         user_id = $2`,
+      [req.body.book_id, user_id],
+    );
+    console.log(book_query.rows);
+  } catch (err) {
+    console.log(`DB Error: ${err}`);
+  }
+
+  if (book_query.rows.length > 0) {
+    try {
+      await DB.query(
+        `UPDATE public.carts
+         SET
+           amount = $1
+         WHERE
+           book_id = $2
+         AND
+           user_id = $3`,
+        [book_query.rows[0].amount + 1, req.body.book_id, user_id],
+      );
+    } catch {
+      return res.send(`Error Adding Item to Cart: ${err}`).status(500);
+    }
+    return res
+      .status(200)
+      .json({ redirect_url: `/book_focus?book_id=${req.body.book_id}` });
+  }
+
+  try {
+    await DB.query(
+      `INSERT INTO public.carts
+     (
+       book_id,
+       user_id,
+       book_title,
+       book_price,
+       book_remaining,
+       amount
+     )
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+      [
+        req.body.book_id,
+        user_id,
+        req.body.book_title,
+        req.body.book_price,
+        req.body.book_remaining,
+        1,
+      ],
+    );
+  } catch (err) {
+    return res.send(`Error Adding Item to Cart: ${err}`).status(500);
+  }
+  return res
+    .status(200)
+    .json({ redirect_url: `/book_focus?book_id=${req.body.book_id}` });
 });
 
 APP.get("/logout", (req, res) => {

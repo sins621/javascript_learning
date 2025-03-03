@@ -23,8 +23,9 @@
         <a href="#">Contact</a>
         <% if (locals.user) { %>
           <% if (user.role === "admin") { %>
-            <a href="<%= url_for('add') %>">Add</a>
+            <a href="<%= url_for('add_book') %>">Add</a>
           <% } %>
+          <a href="/cart">Cart</a>
           <a href="/logout">Logout</a>
         <% } else { %>
           <a href="/register">Register</a>
