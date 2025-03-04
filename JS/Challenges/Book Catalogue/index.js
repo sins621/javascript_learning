@@ -87,15 +87,15 @@ APP.get("/", async (req, res) => {
   }
 
   try {
-    var book_query = await DB.query("SELECT * FROM books");
+    var bookQuery = await DB.query("SELECT * FROM books");
   } catch (err) {
     console.log(`DB Error: ${err}`);
   }
 
-  if (book_query.rows.length === 0)
+  if (bookQuery.rows.length === 0)
     return res.send("Error Retrieving Books").status(500);
 
-  const BOOKS = book_query.rows;
+  const BOOKS = bookQuery.rows;
 
   return res.render("index.ejs", {
     categories: CATEGORIES,
@@ -112,7 +112,7 @@ APP.get("/filter", async (req, res) => {
   }
 
   try {
-    var book_query = await DB.query(
+    var bookQuery = await DB.query(
       `SELECT * FROM books
        WHERE category=$1`,
       [req.query.category],
@@ -121,10 +121,10 @@ APP.get("/filter", async (req, res) => {
     console.log(`DB Error: ${err}`);
   }
 
-  if (book_query.rows.length === 0)
+  if (bookQuery.rows.length === 0)
     return res.send("Error Retrieving Books").status(500);
 
-  const BOOKS = book_query.rows;
+  const BOOKS = bookQuery.rows;
 
   return res.render("index.ejs", {
     categories: CATEGORIES,
@@ -145,16 +145,16 @@ APP.post("/add_book", async (req, res) => {
   if (!req.body) return res.send("Server Error").status(500);
 
   const URL = "https://openlibrary.org/search.json";
-  const PARAMS = {
+  const PARAMS = new URLSearchParams({
     author: req.body.author,
     title: req.body.title,
     limit: 5,
     fields: "title,author_name,cover_i, publish_year",
-  };
+  }).toString();
 
   try {
-    const BOOK_DATA = await axios.get(URL, { params: PARAMS });
-    const BOOKS = BOOK_DATA.data;
+    const BOOK_DATA = await fetch(`${URL}?${PARAMS}`);
+    const BOOKS = await BOOK_DATA.json();
 
     return res.render("add_book.ejs", { books: BOOKS, categories: CATEGORIES });
   } catch (error) {
@@ -210,19 +210,19 @@ APP.get("/book_focus", async (req, res) => {
 
   const BOOK_ID = req.query.book_id;
   try {
-    var book_query = await DB.query("SELECT * FROM books WHERE id = $1", [
+    var bookQuery = await DB.query("SELECT * FROM books WHERE id = $1", [
       BOOK_ID,
     ]);
   } catch (err) {
     console.log(`DB Error ${err}`);
   }
 
-  if (book_query.rows.length === 0)
+  if (bookQuery.rows.length === 0)
     return res.send("Error Retrieving Book").status(500);
 
-  const BOOK = book_query.rows[0];
+  const BOOK = bookQuery.rows[0];
   try {
-    var review_query = await DB.query(
+    var reviewQuery = await DB.query(
       `SELECT * FROM book_reviews
      WHERE book_id = $1`,
       [BOOK_ID],
@@ -232,7 +232,7 @@ APP.get("/book_focus", async (req, res) => {
   }
 
   // Finding no reviews won't result in an error, none will be displayed.
-  const REVIEWS = review_query.rows;
+  const REVIEWS = reviewQuery.rows;
 
   return res.render("book_focus.ejs", {
     book: BOOK,
@@ -245,7 +245,7 @@ APP.post("/add_review", async (req, res) => {
   if (!req.user || !req.body) return res.send("Server Error").status(500);
 
   try {
-    var user_query = await DB.query(
+    var userQuery = await DB.query(
       `SELECT * FROM users
      WHERE email = $1`,
       [req.user.email],
@@ -254,7 +254,7 @@ APP.post("/add_review", async (req, res) => {
     console.log(err);
   }
 
-  if (user_query.rows.length === 0)
+  if (userQuery.rows.length === 0)
     return res.send("Error retrieving Profile").status(500);
 
   try {
@@ -271,10 +271,10 @@ APP.post("/add_review", async (req, res) => {
      VALUES ($1, $2, $3, $4, $5, $6, $7)`,
       [
         req.body.title,
-        user_query.rows[0].name,
+        userQuery.rows[0].name,
         today(),
         req.body.review,
-        user_query.rows[0].id,
+        userQuery.rows[0].id,
         req.body.rating,
         req.body.book_id,
       ],
@@ -308,13 +308,13 @@ APP.get("/cart", async (req, res) => {
       [USER_ID],
     );
 
-    var cart_items = CART_QUERY.rows;
-    console.log(cart_items);
+    var cartItems = CART_QUERY.rows;
+    console.log(cartItems);
   } catch (err) {
     return res.send(`Error Retrieving Cart ${err}`).status(500);
   }
 
-  return res.render("cart.ejs", { user: req.user, cart: cart_items });
+  return res.render("cart.ejs", { user: req.user, cart: cartItems });
 });
 
 APP.post("/add_cart", async (req, res) => {
@@ -324,7 +324,7 @@ APP.post("/add_cart", async (req, res) => {
      WHERE email = $1`,
       [req.body.user_email],
     );
-    var user_id = USER_QUERY.rows[0].id;
+    var userId = USER_QUERY.rows[0].id;
   } catch (err) {
     return res.send(`User Query Error: ${err}`).status(500);
   }
@@ -333,20 +333,20 @@ APP.post("/add_cart", async (req, res) => {
            of books remaining in the books table is updated, so will this table
            need to be updated. */
   try {
-    var book_query = await DB.query(
+    var bookQuery = await DB.query(
       `SELECT * FROM public.carts
        WHERE
          book_id = $1
        AND
          user_id = $2`,
-      [req.body.book_id, user_id],
+      [req.body.book_id, userId],
     );
-    console.log(book_query.rows);
+    console.log(bookQuery.rows);
   } catch (err) {
     console.log(`DB Error: ${err}`);
   }
 
-  if (book_query.rows.length > 0) {
+  if (bookQuery.rows.length > 0) {
     try {
       await DB.query(
         `UPDATE public.carts
@@ -356,7 +356,7 @@ APP.post("/add_cart", async (req, res) => {
            book_id = $2
          AND
            user_id = $3`,
-        [book_query.rows[0].amount + 1, req.body.book_id, user_id],
+        [bookQuery.rows[0].amount + 1, req.body.book_id, userId],
       );
     } catch {
       return res.send(`Error Adding Item to Cart: ${err}`).status(500);
@@ -380,7 +380,7 @@ APP.post("/add_cart", async (req, res) => {
      VALUES ($1, $2, $3, $4, $5, $6)`,
       [
         req.body.book_id,
-        user_id,
+        userId,
         req.body.book_title,
         req.body.book_price,
         req.body.book_remaining,
@@ -426,7 +426,7 @@ APP.post("/register", async (req, res) => {
   const NAME = req.body.name;
 
   try {
-    var check_result = await DB.query(
+    var checkResult = await DB.query(
       `SELECT * FROM users
      WHERE email = $1`,
       [EMAIL],
@@ -435,12 +435,12 @@ APP.post("/register", async (req, res) => {
     console.log(`DB Error ${err}`);
   }
 
-  if (check_result.rows.length > 0) return req.redirect("/login");
+  if (checkResult.rows.length > 0) return req.redirect("/login");
 
   try {
     const HASH = await bcrypt.hash(PASSWORD, SALT_ROUNDS);
     try {
-      var new_user_query = await DB.query(
+      var newUserQuery = await DB.query(
         `INSERT INTO users (email, password, name)
        VALUES ($1, $2, $3) RETURNING *`,
         [EMAIL, HASH, NAME],
@@ -449,15 +449,15 @@ APP.post("/register", async (req, res) => {
       console.log(`Error Adding New User to the DB: ${err}`);
     }
 
-    if (new_user_query.rows.lengh === 0)
+    if (newUserQuery.rows.lengh === 0)
       res.send("Catastrophic Server Failure").status(500);
 
-    const NEW_USER = new_user_query.rows[0];
+    const NEW_USER = newUserQuery.rows[0];
     const USER_ROLE_ID = 2;
     const USER_ROLE_NAME = "user";
 
     try {
-      var user_query = await DB.query(
+      var userQuery = await DB.query(
         `INSERT INTO user_roles (user_id, role_id, email, role)
        VALUES ($1, $2, $3, $4)
        RETURNING *`,
@@ -467,10 +467,9 @@ APP.post("/register", async (req, res) => {
       console.log(`DB Error: ${err}`);
     }
 
-    if (user_query.rows.length === 0)
-      res.send("Unexpected Failure").status(500);
+    if (userQuery.rows.length === 0) res.send("Unexpected Failure").status(500);
 
-    const USER = user_query.rows[0];
+    const USER = userQuery.rows[0];
 
     req.login(USER, (_err) => {
       console.log("success");
@@ -503,7 +502,7 @@ passport.use(
       if (!VALID) return callback(null, false);
 
       try {
-        var user_query = await DB.query(
+        var userQuery = await DB.query(
           `SELECT email, role,
              CASE
                WHEN role = 'admin' THEN 'admin'
@@ -524,7 +523,7 @@ passport.use(
         console.log(`DB Error ${err}`);
       }
 
-      return callback(null, user_query.rows[0]);
+      return callback(null, userQuery.rows[0]);
     } catch (err) {
       console.error("Error comparing passwords:", err);
 
