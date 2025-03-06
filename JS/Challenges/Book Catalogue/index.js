@@ -3,7 +3,6 @@ import bodyParser from "body-parser";
 import morgan from "morgan";
 import pg from "pg";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import axios from "axios";
 import "dotenv/config";
 import bcrypt from "bcrypt";
 import passport from "passport";
