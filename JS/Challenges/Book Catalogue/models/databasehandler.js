@@ -6,8 +6,22 @@ export default class DatabaseHandler {
     this.database.connect();
   }
 
-  async fetchBooks() {
-    const QUERY = await this.database.query("SELECT * FROM books");
+  async fetchBooks(bookInfo) {
+    if (!bookInfo) {
+      const QUERY = await this.database.query("SELECT * FROM books");
+      return QUERY.rows;
+    }
+    if (bookInfo.category){
+      return this.fetchBooksByCategory(bookInfo.category);
+    }
+  }
+
+  async fetchBooksByCategory(category) {
+    const QUERY = await this.database.query(
+      `SELECT * FROM books
+       WHERE category=$1`,
+      [category]
+    );
     return QUERY.rows;
   }
 
@@ -20,11 +34,19 @@ export default class DatabaseHandler {
     }
   }
 
-  async fetchBookByCategory() {}
+  async fetchBookByCategory(category) {
+    const QUERY = await this.database.query(
+      `SELECT * FROM books
+       WHERE category=$1`,
+      [category]
+    );
+    return QUERY.rows[0];
+  }
 
   async fetchBookByID(id) {
-    const QUERY = await this.database.query("SELECT * FROM books WHERE id = $1",
-        [id]
+    const QUERY = await this.database.query(
+      "SELECT * FROM books WHERE id = $1",
+      [id]
     );
     return QUERY.rows[0];
   }

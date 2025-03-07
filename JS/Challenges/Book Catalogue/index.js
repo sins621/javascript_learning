@@ -92,31 +92,18 @@ APP.get("/", async (req, res) => {
 });
 
 APP.get("/filter", async (req, res) => {
-  if (req.isAuthenticated()) {
-    var user = req.user;
-  } else {
-    var user = null;
-  }
-
   try {
-    var bookQuery = await databaseHandler.database.query(
-      `SELECT * FROM books
-       WHERE category=$1`,
-      [req.query.category]
-    );
+    var books = databaseHandler.fetchBooks({ category: req.query.category });
   } catch (err) {
     console.log(`DB Error: ${err}`);
   }
 
-  if (bookQuery.rows.length === 0)
-    return res.send("Error Retrieving Books").status(500);
-
-  const BOOKS = bookQuery.rows;
+  if (books.length === 0) return res.send("Error Retrieving Books").status(500);
 
   return res.render("index.ejs", {
     categories: CATEGORIES,
-    books: BOOKS,
-    user: user,
+    books: books,
+    user: req.user,
   });
 });
 
@@ -178,7 +165,7 @@ APP.get("/book_focus", async (req, res) => {
   if (!req.query) return res.send("Server Error").status(500);
   const BOOK_ID = req.query.book_id;
   try {
-    var book = await databaseHandler.fetchBook({id:BOOK_ID});
+    var book = await databaseHandler.fetchBook({ id: BOOK_ID });
   } catch (err) {
     console.log(`Error Retrieving Book, DB Error ${err}`);
   }
