@@ -79,6 +79,7 @@ function today() {
 
 // Home
 APP.get("/", async (req, res) => {
+  console.log(req.user);
   if (req.isAuthenticated()) {
     var user = req.user;
   } else {
@@ -289,32 +290,23 @@ APP.get("/cart", async (req, res) => {
   if (req.isAuthenticated() === false) return res.render("login.ejs");
 
   try {
-    var result = await DB.query(
-      `SELECT * FROM users
-       WHERE
-         email = $1`,
-      [req.user.email],
-    );
-  } catch (err) {
-    return res.send(`Error Retrieving User ${err}`).status(500);
-  }
-  const USER_ID = result.rows[0].id;
-
-  try {
-    const CART_QUERY = await DB.query(
-      `SELECT * FROM carts
-       WHERE user_id = $1`,
-      [USER_ID],
-    );
-
-    var cartItems = CART_QUERY.rows;
-    console.log(cartItems);
+    var cartItems = await getCart(req.user.id)
   } catch (err) {
     return res.send(`Error Retrieving Cart ${err}`).status(500);
   }
 
   return res.render("cart.ejs", { user: req.user, cart: cartItems });
 });
+
+async function getCart(user_id){
+  const CART_QUERY = await DB.query(
+    `SELECT * FROM carts
+     WHERE user_id = $1`,
+    [user_id],
+  );
+
+  return CART_QUERY.rows;
+}
 
 APP.post("/add_cart", async (req, res) => {
   try {
@@ -521,8 +513,14 @@ passport.use(
       } catch (err) {
         console.log(`DB Error ${err}`);
       }
+      const USER_DATA = {
+        id: USER.id,
+        email: userQuery.rows[0].email,
+        role: userQuery.rows[0].role,
+        cart: await getCart()
+      }
 
-      return callback(null, userQuery.rows[0]);
+      return callback(null, USER_DATA);
     } catch (err) {
       console.error("Error comparing passwords:", err);
 
