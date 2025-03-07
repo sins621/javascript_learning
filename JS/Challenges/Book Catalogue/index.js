@@ -79,7 +79,7 @@ function today() {
 // Home
 APP.get("/", async (req, res) => {
   try {
-    var books = await databaseHandler.fetchBooks();
+    var books = await databaseHandler.fetchAllBooks();
   } catch (err) {
     console.log(`DB Error: ${err}`);
   }
@@ -93,7 +93,7 @@ APP.get("/", async (req, res) => {
 
 APP.get("/filter", async (req, res) => {
   try {
-    var books = databaseHandler.fetchBooks({ category: req.query.category });
+    var books = databaseHandler.fetchAllBooks({ category: req.query.category });
   } catch (err) {
     console.log(`DB Error: ${err}`);
   }
@@ -109,9 +109,7 @@ APP.get("/filter", async (req, res) => {
 
 APP.get("/add_book", async (req, res) => {
   if (req.isAuthenticated() === false) return res.render("login.ejs");
-
   if (req.user.role != "admin") return res.redirect("/");
-
   return res.render("add_book.ejs");
 });
 
@@ -165,7 +163,7 @@ APP.get("/book_focus", async (req, res) => {
   if (!req.query) return res.send("Server Error").status(500);
   const BOOK_ID = req.query.book_id;
   try {
-    var book = await databaseHandler.fetchBook({ id: BOOK_ID });
+    var book = await databaseHandler.fetchBooksBy({ id: BOOK_ID });
   } catch (err) {
     console.log(`Error Retrieving Book, DB Error ${err}`);
   }

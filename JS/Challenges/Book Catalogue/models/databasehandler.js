@@ -6,49 +6,23 @@ export default class DatabaseHandler {
     this.database.connect();
   }
 
-  async fetchBooks(bookInfo) {
-    if (!bookInfo) {
-      const QUERY = await this.database.query("SELECT * FROM books");
-      return QUERY.rows;
-    }
-    if (bookInfo.category){
-      return this.fetchBooksByCategory(bookInfo.category);
-    }
+  async fetchAllBooks(bookInfo) {
+    return await this.database.query("SELECT * FROM books").rows;
   }
 
-  async fetchBooksByCategory(category) {
-    const QUERY = await this.database.query(
-      `SELECT * FROM books
-       WHERE category=$1`,
-      [category]
-    );
-    return QUERY.rows;
-  }
-
-  async fetchBook(bookInfo) {
-    if (bookInfo.category) {
-      return await this.fetchBookByCategory(category);
+  async fetchBooksBy(filter, value) {
+    switch (filter) {
+      case "category":
+        return await this.database.query(
+          `SELECT * FROM books
+                 WHERE category=$1`,
+          [value]
+        );
+      case "id":
+        return await this.database.query("SELECT * FROM books WHERE id = $1", [
+          value,
+        ]).rows[0];
     }
-    if (bookInfo.id) {
-      return await this.fetchBookByID(bookInfo.id);
-    }
-  }
-
-  async fetchBookByCategory(category) {
-    const QUERY = await this.database.query(
-      `SELECT * FROM books
-       WHERE category=$1`,
-      [category]
-    );
-    return QUERY.rows[0];
-  }
-
-  async fetchBookByID(id) {
-    const QUERY = await this.database.query(
-      "SELECT * FROM books WHERE id = $1",
-      [id]
-    );
-    return QUERY.rows[0];
   }
 
   async addBook(bookInfo) {
