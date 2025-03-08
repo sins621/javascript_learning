@@ -74,13 +74,62 @@ export default class DatabaseHandler {
     );
   }
 
-  async fetchCartItems(user_id) {
+  async fetchCartItems(userId) {
     return (
       await this.database.query(
         `SELECT * FROM carts
        WHERE user_id = $1`,
-        [user_id]
+        [userId]
       )
     ).rows;
+  }
+
+  async addBookToCart(bookId, userId) {
+    var bookQuery = await this.database.query(
+      `SELECT * FROM public.carts
+       WHERE
+         book_id = $1
+       AND
+         user_id = $2`,
+      [bookId, userId]
+    );
+
+    if (bookQuery.rows.length > 0) {
+      await this.database.query(
+        `UPDATE public.carts
+         SET
+           amount = $1
+         WHERE
+           book_id = $2
+         AND
+           user_id = $3`,
+        [bookQuery.rows[0].amount + 1, bookId, userId]
+      );
+
+      return res
+        .status(200)
+        .json({ redirect_url: `/book_focus?book_id=${bookId}` });
+    }
+
+    await this.database.query(
+      `INSERT INTO public.carts
+     (
+       book_id,
+       user_id,
+       book_title,
+       book_price,
+       book_remaining,
+       amount
+     )
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+      [
+        bookId,
+        userId,
+        req.body.book_title,
+        req.body.book_price,
+        req.body.book_remaining,
+        1,
+      ]
+    );
   }
 }

@@ -11,6 +11,7 @@ import DatabaseHandler from "./models/databasehandler.js";
 
 // TODO: Error Handling
 // TODO: Continue Migration of db Functions to db Class.
+// FIX: HTML Characters Ending Up in Cart Names
 
 const APP = express();
 APP.use(
@@ -188,64 +189,11 @@ APP.get("/cart", async (req, res) => {
 });
 
 APP.post("/add_cart", async (req, res) => {
-  const userId = (
-    await databaseHandler.database.query(
-      `SELECT * FROM users
-     WHERE email = $1`,
-      [req.body.user_email]
-    )
-  ).rows[0].id;
-
   /* NOTE: This creates a dependancy on the books table. When the price and amount
            of books remaining in the books table is updated, so will this table
            need to be updated. */
 
-  var bookQuery = await databaseHandler.database.query(
-    `SELECT * FROM public.carts
-       WHERE
-         book_id = $1
-       AND
-         user_id = $2`,
-    [req.body.book_id, userId]
-  );
-
-  if (bookQuery.rows.length > 0) {
-    await databaseHandler.database.query(
-      `UPDATE public.carts
-         SET
-           amount = $1
-         WHERE
-           book_id = $2
-         AND
-           user_id = $3`,
-      [bookQuery.rows[0].amount + 1, req.body.book_id, userId]
-    );
-
-    return res
-      .status(200)
-      .json({ redirect_url: `/book_focus?book_id=${req.body.book_id}` });
-  }
-
-  await databaseHandler.database.query(
-    `INSERT INTO public.carts
-     (
-       book_id,
-       user_id,
-       book_title,
-       book_price,
-       book_remaining,
-       amount
-     )
-     VALUES ($1, $2, $3, $4, $5, $6)`,
-    [
-      req.body.book_id,
-      userId,
-      req.body.book_title,
-      req.body.book_price,
-      req.body.book_remaining,
-      1,
-    ]
-  );
+  
 
   return res
     .status(200)
