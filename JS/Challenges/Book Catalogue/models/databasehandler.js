@@ -59,7 +59,7 @@ export default class DatabaseHandler {
   }
 
   async addBookReview(reviewInfo) {
-    await this.database.query(
+    const REVIEW_ID = await this.database.query(
       `INSERT INTO book_reviews (
          review_title,
          reviewer_name,
@@ -69,9 +69,12 @@ export default class DatabaseHandler {
          review_rating,
          book_id
        )
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id
+       `,
       reviewInfo
     );
+    return REVIEW_ID
   }
 
   async fetchCartItems(userId) {
