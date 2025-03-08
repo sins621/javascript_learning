@@ -188,16 +188,10 @@ APP.get("/cart", async (req, res) => {
   return res.render("cart.ejs", { user: req.user, cart: cartItems });
 });
 
-APP.post("/add_cart", async (req, res) => {
-  /* NOTE: This creates a dependancy on the books table. When the price and amount
-           of books remaining in the books table is updated, so will this table
-           need to be updated. */
+APP.get("/add_cart", async (req, res) => {
+  databaseHandler.addBookToCart(req.query.book_id, req.user.id);
 
-  
-
-  return res
-    .status(200)
-    .json({ redirect_url: `/book_focus?book_id=${req.body.book_id}` });
+  return res.redirect(`/book_focus?book_id=${req.query.book_id}`);
 });
 
 APP.get("/logout", (req, res) => {

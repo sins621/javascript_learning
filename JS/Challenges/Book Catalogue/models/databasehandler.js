@@ -85,7 +85,7 @@ export default class DatabaseHandler {
   }
 
   async addBookToCart(bookId, userId) {
-    var bookQuery = await this.database.query(
+    const BOOK_QUERY = await this.database.query(
       `SELECT * FROM public.carts
        WHERE
          book_id = $1
@@ -94,7 +94,7 @@ export default class DatabaseHandler {
       [bookId, userId]
     );
 
-    if (bookQuery.rows.length > 0) {
+    if (BOOK_QUERY.rows.length > 0) {
       await this.database.query(
         `UPDATE public.carts
          SET
@@ -103,14 +103,14 @@ export default class DatabaseHandler {
            book_id = $2
          AND
            user_id = $3`,
-        [bookQuery.rows[0].amount + 1, bookId, userId]
+        [BOOK_QUERY.rows[0].amount + 1, bookId, userId]
       );
 
-      return res
-        .status(200)
-        .json({ redirect_url: `/book_focus?book_id=${bookId}` });
+      return;
     }
 
+    const BOOK_INFO = (await this.fetchBooksBy("id", bookId))[0];
+    console.log(BOOK_INFO);
     await this.database.query(
       `INSERT INTO public.carts
      (
@@ -122,14 +122,7 @@ export default class DatabaseHandler {
        amount
      )
      VALUES ($1, $2, $3, $4, $5, $6)`,
-      [
-        bookId,
-        userId,
-        req.body.book_title,
-        req.body.book_price,
-        req.body.book_remaining,
-        1,
-      ]
+      [bookId, userId, BOOK_INFO.title, BOOK_INFO.price, BOOK_INFO.quantity, 1]
     );
   }
 }

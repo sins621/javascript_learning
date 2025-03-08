@@ -1,3 +1,14 @@
+<styles>
+  a.button {
+    padding: 1px 6px;
+    border: 1px outset buttonborder;
+    border-radius: 3px;
+    color: buttontext;
+    background-color: buttonface;
+    text-decoration: none;
+}
+</styles>
+
 <div class="book-focus">
   <div class="cover-focus">
     <img id = "cover" 
@@ -8,44 +19,19 @@
     <h3><%= book.title %></h3>
     <h4><%= book.author %> <%= book.publish_year %></h4>
   </div>
+
   <div class="abstract-focus">
     <p><%= book.abstract %></p>
   </div>
+
   <div class="price-focus">
     <p><strong>R<%= book.price %></strong></p>
     <% if (locals.user) { %>
-      <button id="purchase-button" onclick="add_to_cart()">Add to Cart</button>
+      <a href="/add_cart?book_id=<%= book.id %>" class="button">Add to Cart</a>
     <% } else { %>
-      <button id="purchase-button" onclick="location.href='/login'" type="button">
+      <a href="/login" class="button">Add to Cart</a>
         Add to Cart
       </button>
     <% } %>
   </div>
 </div>
-<% if (locals.user) { %>
-  <script>
-      const CART_DATA = {
-        book_id : <%= book.id %>,
-        book_title : "<%= book.title %>",
-        user_email : "<%= locals.user.email %>",
-        book_title : "<%= book.title %>",
-        book_price : <%= book.price %>,
-        book_remaining : <%= book.quantity %>
-      }
-
-      async function add_to_cart() {
-        const RESPONSE = await fetch(
-          '/add_cart', {
-            method:"POST",
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(CART_DATA)
-            });
-
-        const DATA = await RESPONSE.json()
-        location.href = DATA.redirect_url;
-      }
-  </script>
-<% } %>
