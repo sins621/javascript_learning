@@ -183,13 +183,13 @@ function today() {
 APP.get("/cart", async (req, res) => {
   if (req.isAuthenticated() === false) return res.render("login.ejs");
 
-  var cartItems = databaseHandler.fetchCartItems(req.user.id);
+  const CART_ITEMS = await databaseHandler.fetchCartItems(req.user.id);
 
-  return res.render("cart.ejs", { user: req.user, cart: cartItems });
+  return res.render("cart.ejs", { user: req.user, cart: CART_ITEMS });
 });
 
 APP.get("/add_cart", async (req, res) => {
-  databaseHandler.addBookToCart(req.query.book_id, req.user.id);
+  await databaseHandler.addBookToCart(req.query.book_id, req.user.id);
 
   return res.redirect(`/book_focus?book_id=${req.query.book_id}`);
 });
@@ -233,28 +233,7 @@ APP.post("/register", async (req, res) => {
   if (checkResult.rows.length > 0) return req.redirect("/login");
 
   const HASH = await bcrypt.hash(PASSWORD, SALT_ROUNDS);
-  var newUserQuery = await databaseHandler.database.query(
-    `INSERT INTO users (email, password, name)
-       VALUES ($1, $2, $3) RETURNING *`,
-    [EMAIL, HASH, NAME]
-  );
 
-  if (newUserQuery.rows.lengh === 0)
-    res.send("Catastrophic Server Failure").status(500);
-
-  const NEW_USER = newUserQuery.rows[0];
-  const USER_ROLE_ID = 2;
-  const USER_ROLE_NAME = "user";
-  var userQuery = await databaseHandler.database.query(
-    `INSERT INTO user_roles (user_id, role_id, email, role)
-       VALUES ($1, $2, $3, $4)
-       RETURNING *`,
-    [NEW_USER.id, USER_ROLE_ID, EMAIL, USER_ROLE_NAME]
-  );
-
-  if (userQuery.rows.length === 0) res.send("Unexpected Failure").status(500);
-
-  const USER = userQuery.rows[0];
   req.login(USER, (_err) => {
     console.log("success");
 
@@ -262,47 +241,32 @@ APP.post("/register", async (req, res) => {
   });
 });
 
+//Login Strategy
 passport.use(
   "local",
   new Strategy(async function verify(username, password, callback) {
-    var result = await databaseHandler.database.query(
-      "SELECT * FROM users WHERE email = $1 ",
-      [username]
+    // Form has to be called username even though it takes email (I think)
+    const REGISTERED_USERS = await databaseHandler.fetchUsersBy(
+      "email",
+      username
     );
 
-    if (result.rows.length === 0) return callback("User not found");
+    if (REGISTERED_USERS.length === 0) return callback("User not found");
 
-    const USER = result.rows[0];
+    const USER = REGISTERED_USERS[0];
     const STORED_HASHED_PASSWORD = USER.password;
     const VALID = await bcrypt.compare(password, STORED_HASHED_PASSWORD);
 
     if (!VALID) return callback(null, false);
 
-    var userQuery = await databaseHandler.database.query(
-      `SELECT email, role,
-             CASE
-               WHEN role = 'admin' THEN 'admin'
-               WHEN role = 'user' THEN 'user'
-               ELSE 'other'
-             END AS role
-           FROM user_roles
-           WHERE user_id = $1
-             ORDER BY CASE
-               WHEN role = 'admin' THEN 1
-               WHEN role = 'user' THEN 2
-               ELSE 3
-             END
-           LIMIT 1;`,
-      [USER.id]
-    );
-    const USER_DATA = {
-      id: USER.id,
-      email: userQuery.rows[0].email,
-      role: userQuery.rows[0].role,
-      cart: await databaseHandler.fetchCartItems(USER.id),
-    };
+    const USER_EMAIL_AND_ROLE = databaseHandler.fetchUserByHighestRole(USER.id);
 
-    return callback(null, USER_DATA);
+    return callback(null, {
+      id: USER.id,
+      email: USER_EMAIL_AND_ROLE.email,
+      role: USER_EMAIL_AND_ROLE.role,
+      cart: await databaseHandler.fetchCartItems(USER.id),
+    });
   })
 );
 
