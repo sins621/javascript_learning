@@ -4,8 +4,8 @@
     <th>Price</th>
     <th>Quantity</th>
   </tr>
-    <% if (locals.cart.length > 0) { %>
-      <% cart.forEach((book) => { %>
+    <% if (locals.user.cart.length > 0) { %>
+      <% user.cart.forEach((book) => { %>
   <tr>
       <td><%= book.book_title %></td>
       <td><%= book.book_price %></td>

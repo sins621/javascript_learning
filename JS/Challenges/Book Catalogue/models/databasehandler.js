@@ -6,22 +6,28 @@ export default class DatabaseHandler {
     this.database.connect();
   }
 
-  async fetchAllBooks(bookInfo) {
-    return await this.database.query("SELECT * FROM books").rows;
+  async fetchAllBooks() {
+    return (await this.database.query("SELECT * FROM books")).rows;
   }
 
   async fetchBooksBy(filter, value) {
     switch (filter) {
       case "category":
-        return await this.database.query(
-          `SELECT * FROM books
-                 WHERE category=$1`,
-          [value]
-        );
+        return (
+          await this.database.query(
+            `SELECT * FROM books
+             WHERE category=$1`,
+            [value]
+          )
+        ).rows;
       case "id":
-        return await this.database.query("SELECT * FROM books WHERE id = $1", [
-          value,
-        ]).rows[0];
+        return (
+          await this.database.query(
+            `SELECT * FROM books 
+             WHERE id = $1`,
+            [value]
+          )
+        ).rows;
     }
   }
 
@@ -43,12 +49,13 @@ export default class DatabaseHandler {
   }
 
   async fetchBookReviews(id) {
-    const QUERY = await this.database.query(
-      `SELECT * FROM book_reviews
+    return (
+      await this.database.query(
+        `SELECT * FROM book_reviews
        WHERE book_id = $1`,
-      [BOOK_ID]
-    );
-    return QUERY.rows;
+        [id]
+      )
+    ).rows;
   }
 
   async addBookReview(reviewInfo) {
@@ -65,5 +72,15 @@ export default class DatabaseHandler {
        VALUES ($1, $2, $3, $4, $5, $6, $7)`,
       reviewInfo
     );
+  }
+
+  async fetchCartItems(user_id) {
+    return (
+      await this.database.query(
+        `SELECT * FROM carts
+       WHERE user_id = $1`,
+        [user_id]
+      )
+    ).rows;
   }
 }
