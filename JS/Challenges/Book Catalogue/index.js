@@ -122,7 +122,7 @@ APP.post("/submit", async (req, res) => {
     req.body.quantity,
     req.body.price,
   ]);
-  await databaseHandler.addLog({
+  databaseHandler.addLog({
     event: "Add",
     object: "Books",
     description: `User: ${req.user.email} Added ${BOOK_INFO.title} to The Catalog.`,
@@ -160,7 +160,7 @@ APP.post("/add_review", async (req, res) => {
     req.body.rating,
     req.body.book_id,
   ]);
-  await databaseHandler.addLog({
+  databaseHandler.addLog({
     event: "Add",
     object: "Review",
     description: `User: ${req.user.email} Added "${
@@ -207,7 +207,7 @@ APP.get("/add_cart", async (req, res) => {
     req.user.id
   );
 
-  await databaseHandler.addLog({
+  databaseHandler.addLog({
     event: "Add",
     object: "Cart",
     description: `User: ${req.user.email} Added ${BOOK_INFO.book_title} to Their Cart`,
@@ -257,13 +257,13 @@ APP.post("/register", async (req, res) => {
 
   const HASH = await bcrypt.hash(PASSWORD, SALT_ROUNDS);
   const USER = await databaseHandler.addUser(EMAIL, HASH, NAME);
-  await databaseHandler.addLog({
+  databaseHandler.addLog({
     event: "Register",
     object: "Users",
     description: `User: ${USER.email} Registered an Account.`,
     createdBy: USER.email
   })
-  
+
   req.login(USER, (_err) => {
     console.log("success");
 
@@ -292,7 +292,7 @@ passport.use(
     const USER_EMAIL_AND_ROLE = await databaseHandler.fetchUserByHighestRole(
       USER.id
     );
-    await databaseHandler.addLog({
+    databaseHandler.addLog({
       event: "Login",
       object: "Users",
       description: `User: ${USER_EMAIL_AND_ROLE.email} Logged In.`,
