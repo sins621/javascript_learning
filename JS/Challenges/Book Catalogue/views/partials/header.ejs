@@ -5,7 +5,6 @@
     flex-wrap: wrap;
     align-items: center;
   }
-
 </style>
 <header>
   <div id="titlebar">
@@ -27,6 +26,7 @@
           <% } else { %>
           <% } %>
           <a href="/cart">Cart</a>
+          <p><%= user.cart.length %></p>
           <a href="/logout">Logout</a>
         <% } else { %>
           <a href="/register">Register</a>

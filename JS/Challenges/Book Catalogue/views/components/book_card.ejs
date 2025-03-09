@@ -1,4 +1,4 @@
-<styles>
+<style>
   a.button {
     padding: 1px 6px;
     border: 1px outset buttonborder;
@@ -6,9 +6,8 @@
     color: buttontext;
     background-color: buttonface;
     text-decoration: none;
-}
-</styles>
-
+  }
+</style>
 <div class="book-focus">
   <div class="cover-focus">
     <img id = "cover" 
@@ -30,8 +29,6 @@
       <a href="/add_cart?book_id=<%= book.id %>" class="button">Add to Cart</a>
     <% } else { %>
       <a href="/login" class="button">Add to Cart</a>
-        Add to Cart
-      </button>
     <% } %>
   </div>
 </div>
