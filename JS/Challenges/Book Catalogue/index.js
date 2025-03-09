@@ -189,7 +189,8 @@ APP.get("/cart", async (req, res) => {
 });
 
 APP.get("/add_cart", async (req, res) => {
-  await databaseHandler.addBookToCart(req.query.book_id, req.user.id);
+  const RESPONSE = await databaseHandler.addBookToCart(req.query.book_id, req.user.id);
+  console.log(RESPONSE)
   req.user.cart = await databaseHandler.fetchCartItems(req.user.id)
   return res.redirect(`/book_focus?book_id=${req.query.book_id}`);
 });
