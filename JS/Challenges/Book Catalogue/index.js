@@ -189,9 +189,19 @@ APP.get("/cart", async (req, res) => {
 });
 
 APP.get("/add_cart", async (req, res) => {
-  const RESPONSE = await databaseHandler.addBookToCart(req.query.book_id, req.user.id);
-  console.log(RESPONSE)
-  req.user.cart = await databaseHandler.fetchCartItems(req.user.id)
+  const BOOK_INFO = await databaseHandler.addBookToCart(
+    req.query.book_id,
+    req.user.id
+  );
+
+  const LOG_INFO = {
+    event: "Add",
+    object: "Cart",
+    description: `User: ${req.user.email} Added ${BOOK_INFO.book_title} to Their Cart`,
+    createdBy: req.user.email,
+  };
+  await databaseHandler.addLog(LOG_INFO);
+  req.user.cart = await databaseHandler.fetchCartItems(req.user.id);
   return res.redirect(`/book_focus?book_id=${req.query.book_id}`);
 });
 
@@ -234,7 +244,7 @@ APP.post("/register", async (req, res) => {
   if (checkResult.rows.length > 0) return req.redirect("/login");
 
   const HASH = await bcrypt.hash(PASSWORD, SALT_ROUNDS);
-  const USER = await databaseHandler.addUser(EMAIL, HASH, NAME)
+  const USER = await databaseHandler.addUser(EMAIL, HASH, NAME);
   req.login(USER, (_err) => {
     console.log("success");
 
@@ -260,8 +270,8 @@ passport.use(
 
     if (!VALID) return callback(null, false);
 
-    const USER_EMAIL_AND_ROLE = databaseHandler.fetchUserByHighestRole(USER.id);
-
+    const USER_EMAIL_AND_ROLE = await databaseHandler.fetchUserByHighestRole(USER.id);
+    console.log(USER_EMAIL_AND_ROLE);
     return callback(null, {
       id: USER.id,
       email: USER_EMAIL_AND_ROLE.email,

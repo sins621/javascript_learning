@@ -180,7 +180,6 @@ export default class DatabaseHandler {
         [email, hash, name]
       )
     ).rows[0];
-    console.log(userTableUser);
 
     const USER_ROLE_ID = 2;
     const USER_ROLE_NAME = "user";
@@ -194,8 +193,6 @@ export default class DatabaseHandler {
         [userTableUser.id, USER_ROLE_ID, email, USER_ROLE_NAME]
       )
     ).rows[0];
-
-    console.log(roleTableUser);
 
     return {
       id: userTableUser.id,
@@ -220,7 +217,7 @@ export default class DatabaseHandler {
       ($1, $2, $3, now(), $4)
       RETURNING id
       `,
-      [logInfo.event, logInfo.object, logInfo.description, logInfo.created_by]
+      [logInfo.event, logInfo.object, logInfo.description, logInfo.createdBy]
     );
   }
 }
