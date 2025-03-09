@@ -36,8 +36,9 @@ export default class DatabaseHandler {
   }
 
   async addBook(bookInfo) {
-    this.database.query(
-      `
+    return (
+      await this.database.query(
+        `
       INSERT INTO books 
       (
         title,
@@ -49,9 +50,11 @@ export default class DatabaseHandler {
         quantity,
         price
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-      bookInfo
-    );
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING *`,
+        bookInfo
+      )
+    ).rows[0];
   }
 
   async fetchBookReviews(id) {
@@ -67,7 +70,7 @@ export default class DatabaseHandler {
   }
 
   async addBookReview(reviewInfo) {
-    const REVIEW_ID = await this.database.query(
+    return (await this.database.query(
       `
       INSERT INTO book_reviews (
         review_title,
@@ -79,12 +82,10 @@ export default class DatabaseHandler {
         book_id
       )
       VALUES ($1, $2, $3, $4, $5, $6, $7)
-      RETURNING id
+      RETURNING *
        `,
       reviewInfo
-    );
-
-    return REVIEW_ID;
+    )).rows[0];
   }
 
   async fetchCartItems(userId) {
@@ -202,7 +203,12 @@ export default class DatabaseHandler {
     };
   }
 
-  async addLog(logInfo) {
+  async addLog({
+    event = null,
+    object = null,
+    description = null,
+    createdBy = null,
+  } = {}) {
     return await this.database.query(
       `
       INSERT INTO public.logs
@@ -217,7 +223,7 @@ export default class DatabaseHandler {
       ($1, $2, $3, now(), $4)
       RETURNING id
       `,
-      [logInfo.event, logInfo.object, logInfo.description, logInfo.createdBy]
+      [event, object, description, createdBy]
     );
   }
 }

@@ -112,7 +112,7 @@ APP.post("/submit", async (req, res) => {
   if (!req.body) return res.send("Server Error").status(500);
 
   const BOOK = JSON.parse(req.body.book);
-  databaseHandler.addBook([
+  const BOOK_INFO = await databaseHandler.addBook([
     BOOK.title,
     BOOK.author_name[0],
     req.body.category,
@@ -122,6 +122,12 @@ APP.post("/submit", async (req, res) => {
     req.body.quantity,
     req.body.price,
   ]);
+  await databaseHandler.addLog({
+    event: "Add",
+    object: "Books",
+    description: `User: ${req.user.email} Added ${BOOK_INFO.title} to The Catalog.`,
+    createdBy: req.user.email,
+  });
 
   return res.redirect("/");
 });
@@ -145,11 +151,7 @@ APP.get("/book_focus", async (req, res) => {
 
 APP.post("/add_review", async (req, res) => {
   if (!req.user || !req.body) return res.send("Server Error").status(500);
-
-  if (user.rows.length === 0)
-    return res.send("Error retrieving Profile").status(500);
-
-  const REVIEW_INFO = [
+  const REVIEW_INFO = await databaseHandler.addBookReview([
     req.body.title,
     req.user.name,
     today(),
@@ -157,8 +159,19 @@ APP.post("/add_review", async (req, res) => {
     req.user.id,
     req.body.rating,
     req.body.book_id,
-  ];
-  await databaseHandler.addBookReview(REVIEW_INFO);
+  ]);
+  await databaseHandler.addLog({
+    event: "Add",
+    object: "Review",
+    description: `User: ${req.user.email} Added "${
+      REVIEW_INFO.review_title
+    }" to ${
+      (
+        await databaseHandler.fetchBooksBy("id", REVIEW_INFO.book_id)
+      )[0].title
+    }`,
+    createdBy: req.user.email,
+  });
 
   res.redirect(`/book_focus?book_id=${req.body.book_id}`);
 });
@@ -194,13 +207,12 @@ APP.get("/add_cart", async (req, res) => {
     req.user.id
   );
 
-  const LOG_INFO = {
+  await databaseHandler.addLog({
     event: "Add",
     object: "Cart",
     description: `User: ${req.user.email} Added ${BOOK_INFO.book_title} to Their Cart`,
     createdBy: req.user.email,
-  };
-  await databaseHandler.addLog(LOG_INFO);
+  });
   req.user.cart = await databaseHandler.fetchCartItems(req.user.id);
   return res.redirect(`/book_focus?book_id=${req.query.book_id}`);
 });
@@ -245,6 +257,13 @@ APP.post("/register", async (req, res) => {
 
   const HASH = await bcrypt.hash(PASSWORD, SALT_ROUNDS);
   const USER = await databaseHandler.addUser(EMAIL, HASH, NAME);
+  await databaseHandler.addLog({
+    event: "Register",
+    object: "Users",
+    description: `User: ${USER.email} Registered an Account.`,
+    createdBy: USER.email
+  })
+  
   req.login(USER, (_err) => {
     console.log("success");
 
@@ -270,10 +289,19 @@ passport.use(
 
     if (!VALID) return callback(null, false);
 
-    const USER_EMAIL_AND_ROLE = await databaseHandler.fetchUserByHighestRole(USER.id);
-    console.log(USER_EMAIL_AND_ROLE);
+    const USER_EMAIL_AND_ROLE = await databaseHandler.fetchUserByHighestRole(
+      USER.id
+    );
+    await databaseHandler.addLog({
+      event: "Login",
+      object: "Users",
+      description: `User: ${USER_EMAIL_AND_ROLE.email} Logged In.`,
+      createdBy: USER_EMAIL_AND_ROLE.email
+    })
+
     return callback(null, {
       id: USER.id,
+      name: USER.name,
       email: USER_EMAIL_AND_ROLE.email,
       role: USER_EMAIL_AND_ROLE.role,
       cart: await databaseHandler.fetchCartItems(USER.id),
