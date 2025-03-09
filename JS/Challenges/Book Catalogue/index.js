@@ -183,14 +183,14 @@ function today() {
 APP.get("/cart", async (req, res) => {
   if (req.isAuthenticated() === false) return res.render("login.ejs");
 
-  const CART_ITEMS = await databaseHandler.fetchCartItems(req.user.id);
+  req.user.cart = await databaseHandler.fetchCartItems(req.user.id);
 
-  return res.render("cart.ejs", { user: req.user, cart: CART_ITEMS });
+  return res.render("cart.ejs", { user: req.user });
 });
 
 APP.get("/add_cart", async (req, res) => {
   await databaseHandler.addBookToCart(req.query.book_id, req.user.id);
-
+  req.user.cart = await databaseHandler.fetchCartItems(req.user.id)
   return res.redirect(`/book_focus?book_id=${req.query.book_id}`);
 });
 
@@ -233,7 +233,7 @@ APP.post("/register", async (req, res) => {
   if (checkResult.rows.length > 0) return req.redirect("/login");
 
   const HASH = await bcrypt.hash(PASSWORD, SALT_ROUNDS);
-
+  const USER = await databaseHandler.addUser(EMAIL, HASH, NAME)
   req.login(USER, (_err) => {
     console.log("success");
 

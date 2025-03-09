@@ -182,6 +182,7 @@ export default class DatabaseHandler {
         [email, hash, name]
       )
     ).rows[0];
+    console.log(userTableUser);
 
     const USER_ROLE_ID = 2;
     const USER_ROLE_NAME = "user";
@@ -194,6 +195,32 @@ export default class DatabaseHandler {
       )
     ).rows[0];
 
-    return roleTableUser;
+    console.log(roleTableUser);
+
+    return {
+      id: userTableUser.id,
+      email: roleTableUser.email,
+      role: roleTableUser.role,
+      cart: await this.fetchCartItems(roleTableUser.id),
+    };
+  }
+
+  async addLog(logInfo) {
+    return await this.database.query(
+      `
+      INSERT INTO public.logs
+      (
+        event,
+        object,
+        description,
+        created_on,
+        created_by
+      )
+      VALUES
+      ($1, $2, $3, now(), $4)
+      RETURNING id
+      `,
+      [logInfo.event, logInfo.object, logInfo.description, logInfo.created_by]
+    );
   }
 }
