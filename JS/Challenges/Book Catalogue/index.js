@@ -9,25 +9,27 @@ import { Strategy } from "passport-local";
 import session from "express-session";
 import DatabaseHandler from "./models/databasehandler.js";
 import Mailer from "./models/mailer.js";
+import API from "./models/api.js";
+
 
 // TODO: Error Handling
 // TODO: Continue Migration of db Functions to db Class.
 // FIX: HTML Characters Ending Up in Cart Names
 
-const APP = express();
-APP.use(
+const app = express();
+app.use(
   session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
   })
 );
-APP.use(bodyParser.urlencoded({ extended: true }));
-APP.use(bodyParser.json());
-APP.use(express.static("public"));
-APP.use(morgan("tiny"));
-APP.use(passport.initialize());
-APP.use(passport.session());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(express.static("public"));
+app.use(morgan("tiny"));
+app.use(passport.initialize());
+app.use(passport.session());
 
 const PORT = 6199;
 
@@ -38,6 +40,8 @@ const CLIENT_INFO = {
   password: process.env.DB_PASS,
   port: 5432,
 };
+
+const api = new API(app)
 
 const databaseHandler = new DatabaseHandler(CLIENT_INFO);
 
@@ -63,7 +67,7 @@ const SALT_ROUNDS = 10;
 const mailer = new Mailer(process.env.MAIL_USER, process.env.MAIL_PASS);
 
 // Home
-APP.get("/", async (req, res) => {
+app.get("/", async (req, res) => {
   var books = await databaseHandler.fetchAllBooks();
 
   if (books.length === 0) return res.send("Error Retrieving Books").status(500);
@@ -75,7 +79,7 @@ APP.get("/", async (req, res) => {
   });
 });
 
-APP.get("/filter", async (req, res) => {
+app.get("/filter", async (req, res) => {
   var books = databaseHandler.fetchAllBooks({ category: req.query.category });
 
   if (books.length === 0) return res.send("Error Retrieving Books").status(500);
@@ -87,7 +91,7 @@ APP.get("/filter", async (req, res) => {
   });
 });
 
-APP.get("/add_book", async (req, res) => {
+app.get("/add_book", async (req, res) => {
   if (req.isAuthenticated() === false) return res.render("login.ejs");
 
   if (req.user.role != "admin") return res.redirect("/");
@@ -95,7 +99,7 @@ APP.get("/add_book", async (req, res) => {
   return res.render("add_book.ejs");
 });
 
-APP.post("/add_book", async (req, res) => {
+app.post("/add_book", async (req, res) => {
   if (!req.body) return res.send("Server Error").status(500);
 
   const URL = "https://openlibrary.org/search.json";
@@ -111,7 +115,7 @@ APP.post("/add_book", async (req, res) => {
   return res.render("add_book.ejs", { books: BOOKS, categories: CATEGORIES });
 });
 
-APP.post("/submit", async (req, res) => {
+app.post("/submit", async (req, res) => {
   if (!req.body) return res.send("Server Error").status(500);
 
   const BOOK = JSON.parse(req.body.book);
@@ -146,7 +150,7 @@ Visit your nearest Knowl & Tree Bookstore to Grab a Copy!`
   return res.redirect("/");
 });
 
-APP.get("/book_focus", async (req, res) => {
+app.get("/book_focus", async (req, res) => {
   if (!req.query) return res.send("Server Error").status(500);
 
   const BOOK_ID = req.query.book_id;
@@ -163,7 +167,7 @@ APP.get("/book_focus", async (req, res) => {
   });
 });
 
-APP.post("/add_review", async (req, res) => {
+app.post("/add_review", async (req, res) => {
   if (!req.user || !req.body) return res.send("Server Error").status(500);
   const REVIEW_INFO = await databaseHandler.addBookReview([
     req.body.title,
@@ -205,7 +209,7 @@ function today() {
   return yyyy + "-" + mm + "-" + dd;
 }
 
-APP.get("/cart", async (req, res) => {
+app.get("/cart", async (req, res) => {
   if (req.isAuthenticated() === false) return res.render("login.ejs");
 
   req.user.cart = await databaseHandler.fetchCartItems(req.user.id);
@@ -213,7 +217,7 @@ APP.get("/cart", async (req, res) => {
   return res.render("cart.ejs", { user: req.user });
 });
 
-APP.get("/add_cart", async (req, res) => {
+app.get("/add_cart", async (req, res) => {
   const BOOK_INFO = await databaseHandler.addBookToCart(
     req.query.book_id,
     req.user.id
@@ -229,7 +233,7 @@ APP.get("/add_cart", async (req, res) => {
   return res.redirect(`/book_focus?book_id=${req.query.book_id}`);
 });
 
-APP.get("/logout", (req, res) => {
+app.get("/logout", (req, res) => {
   req.logout((err) => {
     if (err) return next(err);
 
@@ -237,11 +241,11 @@ APP.get("/logout", (req, res) => {
   });
 });
 
-APP.get("/login", (_req, res) => {
+app.get("/login", (_req, res) => {
   res.render("login.ejs");
 });
 
-APP.post(
+app.post(
   "/login",
   passport.authenticate("local", {
     successRedirect: "/",
@@ -249,11 +253,11 @@ APP.post(
   })
 );
 
-APP.get("/register", (_req, res) => {
+app.get("/register", (_req, res) => {
   res.render("register.ejs");
 });
 
-APP.post("/register", async (req, res) => {
+app.post("/register", async (req, res) => {
   if (!req.body) return res.send("Server Error").status(500);
 
   const EMAIL = req.body.username;
@@ -328,7 +332,7 @@ passport.deserializeUser((user, callback) => {
   callback(null, user);
 });
 
-APP.get("/api/ai_abstract", async (req, res) => {
+app.get("/api/ai_abstract", async (req, res) => {
   const AUTHOR = req.query.author;
   const TITLE = req.query.title;
   const GEN_AI = new GoogleGenerativeAI(process.env.GEMINI_KEY);
@@ -340,11 +344,11 @@ APP.get("/api/ai_abstract", async (req, res) => {
   return res.send(TEXT);
 });
 
-APP.listen(PORT, () => {
+app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
 
-APP.locals.url_for = function (route, params = {}) {
+app.locals.url_for = function (route, params = {}) {
   const QUERY_STRING = new URLSearchParams(params).toString();
 
   return QUERY_STRING ? `${route}?${QUERY_STRING}` : route;
