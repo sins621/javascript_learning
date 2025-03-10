@@ -15,11 +15,11 @@
   >
     <option selected>Select the Correct Book</option>
     <% locals.books.docs.forEach((book)=> { %>
-    <option value="<%= JSON.stringify(book) %>">
-      <%= book.title %> <%= (book.publish_year &&
-      Array.isArray(book.publish_year) && book.publish_year.length> 0) ?
-      book.publish_year[0] : "N/A" %>
-    </option>
+      <option value="<%= JSON.stringify(book) %>">
+        <%= book.title %> <%= (book.publish_year &&
+        Array.isArray(book.publish_year) && book.publish_year.length> 0) ?
+        book.publish_year[0] : "N/A" %>
+      </option>
     <% }) %>
   </select>
 

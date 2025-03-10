@@ -1,0 +1,33 @@
+<table>
+  <tr>
+    <th>email</th>
+    <th>role</th>
+  </tr>
+  <% if (locals.site_users.length > 0) { %> <% site_users.forEach((site_user) =>
+  { %>
+  <tr>
+    <td><%= site_user.email %></td>
+    <td>
+      <select data-email="<%= site_user.email %>" name="user-table">
+        <option <% if (site_user.role === "admin") { %> selected="selected" <% } %> value="admin">admin</option>
+        <option <% if (site_user.role === "user") { %> selected="selected" <% } %> value="user">user</option>
+      </select>
+    </td>
+    <% }); %>
+  </tr>
+  <% } else { %>
+  <p>No Users</p>
+  <% } %>
+</table>
+<script>
+  const selectDropdowns = document.querySelectorAll("select");
+  selectDropdowns.forEach((selectDropdown) => {
+    selectDropdown.addEventListener("change", function (event) {
+      // console.log(selectDropdowns.value);
+      let email = event.target.dataset.email;
+      console.log(email);
+      let value = event.target.value;
+      console.log(value);
+    });
+  });
+</script>

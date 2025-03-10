@@ -1,7 +1,6 @@
 import express from "express";
 import bodyParser from "body-parser";
 import morgan from "morgan";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import "dotenv/config";
 import bcrypt from "bcrypt";
 import passport from "passport";
@@ -10,7 +9,6 @@ import session from "express-session";
 import DatabaseHandler from "./models/databasehandler.js";
 import Mailer from "./models/mailer.js";
 import API from "./models/api.js";
-
 
 // TODO: Error Handling
 // TODO: Continue Migration of db Functions to db Class.
@@ -40,8 +38,6 @@ const CLIENT_INFO = {
   password: process.env.DB_PASS,
   port: 5432,
 };
-
-const api = new API(app)
 
 const databaseHandler = new DatabaseHandler(CLIENT_INFO);
 
@@ -137,7 +133,7 @@ app.post("/submit", async (req, res) => {
   });
 
   const SUBSCRIBERS = await databaseHandler.fetchSubscribers();
-  
+
   mailer.notifySubscribers(
     SUBSCRIBERS,
     `${BOOK.title} just got added to the Catalog!`,
@@ -231,6 +227,12 @@ app.get("/add_cart", async (req, res) => {
   });
   req.user.cart = await databaseHandler.fetchCartItems(req.user.id);
   return res.redirect(`/book_focus?book_id=${req.query.book_id}`);
+});
+
+app.get("/user_panel", async (req, res) => {
+  if (req.user.role !== "admin") res.redirect("/login");
+  const SITE_USERS = await databaseHandler.fetchAllUsersRoles();
+  return res.render("user_panel.ejs", { site_users: SITE_USERS });
 });
 
 app.get("/logout", (req, res) => {
@@ -332,17 +334,7 @@ passport.deserializeUser((user, callback) => {
   callback(null, user);
 });
 
-app.get("/api/ai_abstract", async (req, res) => {
-  const AUTHOR = req.query.author;
-  const TITLE = req.query.title;
-  const GEN_AI = new GoogleGenerativeAI(process.env.GEMINI_KEY);
-  const MODEL = GEN_AI.getGenerativeModel({ model: "gemini-1.5-flash" });
-  const PROMPT = `Provide a 20-30 word abstract for the Book ${TITLE} by ${AUTHOR}`;
-  const RESULT = await MODEL.generateContent(PROMPT);
-  const TEXT = RESULT.response.candidates[0].content.parts[0].text;
-
-  return res.send(TEXT);
-});
+const api = new API(app);
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

@@ -149,6 +149,27 @@ export default class DatabaseHandler {
     }
   }
 
+  async fetchAllUsersRoles() {
+    return (
+      await this.database.query(
+        `
+              SELECT email, role,
+          CASE
+            WHEN role = 'admin' THEN 'admin'
+            WHEN role = 'user' THEN 'user'
+            ELSE 'other'
+          END AS role
+        FROM user_roles
+          ORDER BY CASE
+            WHEN role = 'admin' THEN 1
+            WHEN role = 'user' THEN 2
+            ELSE 3
+          END;
+      `
+      )
+    ).rows;
+  }
+
   async fetchUserByHighestRole(id) {
     return (
       await this.database.query(
