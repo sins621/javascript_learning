@@ -16,11 +16,12 @@ export default class Mailer {
   }
 
   async notifySubscribers(subscribers, subject, text) {
+    console.log(subscribers)
     const RESULTS = await Promise.all(
       subscribers.map(async (subscriber) => {
         const MAIL_INFO = await this.transporter.sendMail({
           from: this.user,
-          to: subscriber,
+          to: subscriber.email,
           subject: subject,
           text: text,
         });

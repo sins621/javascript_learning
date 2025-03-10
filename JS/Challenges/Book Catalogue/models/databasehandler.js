@@ -70,8 +70,9 @@ export default class DatabaseHandler {
   }
 
   async addBookReview(reviewInfo) {
-    return (await this.database.query(
-      `
+    return (
+      await this.database.query(
+        `
       INSERT INTO book_reviews (
         review_title,
         reviewer_name,
@@ -84,8 +85,9 @@ export default class DatabaseHandler {
       VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *
        `,
-      reviewInfo
-    )).rows[0];
+        reviewInfo
+      )
+    ).rows[0];
   }
 
   async fetchCartItems(userId) {
@@ -225,5 +227,15 @@ export default class DatabaseHandler {
       `,
       [event, object, description, createdBy]
     );
+  }
+
+  async fetchSubscribers() {
+    return (
+      await this.database.query(
+        `
+      SELECT * FROM public.subscribers
+      `
+      )
+    ).rows;
   }
 }

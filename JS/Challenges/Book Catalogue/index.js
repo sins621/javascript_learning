@@ -8,6 +8,7 @@ import passport from "passport";
 import { Strategy } from "passport-local";
 import session from "express-session";
 import DatabaseHandler from "./models/databasehandler.js";
+import Mailer from "./models/mailer.js";
 
 // TODO: Error Handling
 // TODO: Continue Migration of db Functions to db Class.
@@ -58,6 +59,8 @@ const CATEGORIES = [
 ];
 
 const SALT_ROUNDS = 10;
+
+const mailer = new Mailer(process.env.MAIL_USER, process.env.MAIL_PASS);
 
 // Home
 APP.get("/", async (req, res) => {
@@ -129,6 +132,17 @@ APP.post("/submit", async (req, res) => {
     createdBy: req.user.email,
   });
 
+  const SUBSCRIBERS = await databaseHandler.fetchSubscribers();
+  
+  mailer.notifySubscribers(
+    SUBSCRIBERS,
+    `${BOOK.title} just got added to the Catalog!`,
+    `${BOOK.title} by ${BOOK.author_name}.
+${req.body.abstract}
+
+Visit your nearest Knowl & Tree Bookstore to Grab a Copy!`
+  );
+
   return res.redirect("/");
 });
 
@@ -166,9 +180,7 @@ APP.post("/add_review", async (req, res) => {
     description: `User: ${req.user.email} Added "${
       REVIEW_INFO.review_title
     }" to ${
-      (
-        await databaseHandler.fetchBooksBy("id", REVIEW_INFO.book_id)
-      )[0].title
+      (await databaseHandler.fetchBooksBy("id", REVIEW_INFO.book_id))[0].title
     }`,
     createdBy: req.user.email,
   });
@@ -261,8 +273,8 @@ APP.post("/register", async (req, res) => {
     event: "Register",
     object: "Users",
     description: `User: ${USER.email} Registered an Account.`,
-    createdBy: USER.email
-  })
+    createdBy: USER.email,
+  });
 
   req.login(USER, (_err) => {
     console.log("success");
@@ -296,8 +308,8 @@ passport.use(
       event: "Login",
       object: "Users",
       description: `User: ${USER_EMAIL_AND_ROLE.email} Logged In.`,
-      createdBy: USER_EMAIL_AND_ROLE.email
-    })
+      createdBy: USER_EMAIL_AND_ROLE.email,
+    });
 
     return callback(null, {
       id: USER.id,
