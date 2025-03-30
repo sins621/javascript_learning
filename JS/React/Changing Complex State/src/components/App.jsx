@@ -11,25 +11,10 @@ function App() {
     const { name, value } = event.target;
 
     setContact((prevObject) => {
-      if (name === "fName") {
-        return {
-          fName: value,
-          lName: prevObject.lName,
-          email: prevObject.email,
-        };
-      } else if (name === "lName") {
-        return {
-          fName: prevObject.fName,
-          lName: value,
-          email: prevObject.email,
-        };
-      } else if (name === "email") {
-        return {
-          fName: prevObject.fName,
-          lName: prevObject.lName,
-          email: value,
-        };
-      }
+      return {
+        ...prevObject,
+        [name]: value,
+      };
     });
   }
 
